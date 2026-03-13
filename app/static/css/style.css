@@ -259,9 +259,7 @@ dd { font-size: .9rem; }
 .chart-wrapper {
     position: relative;
     height: 260px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 100%;
 }
 @media (max-width: 640px) {
     .charts-grid { grid-template-columns: 1fr; }
