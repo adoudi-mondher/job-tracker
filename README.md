@@ -68,6 +68,12 @@ Authorization: Bearer <APP_PASSWORD>
 
 `À envoyer` → `Envoyée` → `Relance` → `Entretien` → `Refus` → `Abandonné`
 
+## Roadmap
+
+- [ ] Graphiques stats dashboard (Chart.js) — évolution candidatures par semaine, répartition par statut
+- [ ] Déploiement VPS Debian (Gunicorn + Nginx)
+- [ ] Automation relances via n8n self-hosted
+
 ## Licence
 
 MIT — fork librement.
