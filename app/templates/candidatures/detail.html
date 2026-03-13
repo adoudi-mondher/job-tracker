@@ -1,0 +1,134 @@
+{% extends "base/layout.html" %}
+{% block title %}{{ candidature.poste }} — Job Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ candidature.poste }}</h1>
+    <div>
+        <a href="{{ url_for('candidatures.modifier', id=candidature.id) }}" class="btn">Modifier</a>
+        <a href="{{ url_for('candidatures.index') }}" class="btn">← Retour</a>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <!-- Infos candidature -->
+    <div class="card">
+        <h2>Candidature</h2>
+        <dl>
+            <dt>Entreprise</dt>
+            <dd><strong>{{ candidature.entreprise.nom }}</strong>
+                {% if candidature.entreprise.localisation %}
+                — {{ candidature.entreprise.localisation }}
+                {% endif %}
+            </dd>
+
+            <dt>Type de contrat</dt>
+            <dd>{{ candidature.type_contrat }}</dd>
+
+            <dt>Date d'envoi</dt>
+            <dd>{{ candidature.date_envoi.strftime('%d/%m/%Y') }}
+                (J+{{ candidature.jours_depuis_envoi }})
+            </dd>
+
+            <dt>Statut</dt>
+            <dd id="statut-{{ candidature.id }}">
+                {% include 'candidatures/_statut_badge.html' %}
+            </dd>
+
+            <dt>Date de relance</dt>
+            <dd>
+                {% if candidature.relance_due %}
+                    <span class="badge badge-warning">⚠️ Due depuis le {{ candidature.date_relance.strftime('%d/%m/%Y') }}</span>
+                {% elif candidature.date_relance %}
+                    {{ candidature.date_relance.strftime('%d/%m/%Y') }}
+                {% else %}—{% endif %}
+            </dd>
+
+            {% if candidature.lien_offre %}
+            <dt>Lien offre</dt>
+            <dd><a href="{{ candidature.lien_offre }}" target="_blank">Voir l'offre ↗</a></dd>
+            {% endif %}
+
+            {% if candidature.lm_fichier %}
+            <dt>Lettre de motivation</dt>
+            <dd>{{ candidature.lm_fichier }}</dd>
+            {% endif %}
+
+            {% if candidature.notes %}
+            <dt>Notes</dt>
+            <dd>{{ candidature.notes }}</dd>
+            {% endif %}
+        </dl>
+    </div>
+
+    <!-- Infos entreprise -->
+    <div class="card">
+        <h2>Entreprise</h2>
+        <dl>
+            <dt>Secteur</dt>
+            <dd>{{ candidature.entreprise.secteur or '—' }}</dd>
+
+            {% if candidature.entreprise.site_web %}
+            <dt>Site web</dt>
+            <dd><a href="{{ candidature.entreprise.site_web }}" target="_blank">
+                {{ candidature.entreprise.site_web }}</a></dd>
+            {% endif %}
+
+            {% if candidature.entreprise.contact_nom %}
+            <dt>Contact</dt>
+            <dd>{{ candidature.entreprise.contact_nom }}
+                {% if candidature.entreprise.contact_email %}
+                — <a href="mailto:{{ candidature.entreprise.contact_email }}">
+                    {{ candidature.entreprise.contact_email }}</a>
+                {% endif %}
+            </dd>
+            {% endif %}
+        </dl>
+    </div>
+</div>
+
+<!-- Historique interactions -->
+<section class="section">
+    <div class="section-header">
+        <h2>Historique ({{ candidature.interactions|length }})</h2>
+        <a href="{{ url_for('interactions.nouvelle', candidature_id=candidature.id) }}"
+           class="btn btn-primary btn-sm">+ Ajouter</a>
+    </div>
+
+    {% if candidature.interactions %}
+    <table>
+        <thead>
+            <tr><th>Date</th><th>Type</th><th>Notes</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for i in candidature.interactions | sort(attribute='date', reverse=True) %}
+            <tr>
+                <td>{{ i.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td><span class="badge">{{ i.type_interaction }}</span></td>
+                <td>{{ i.notes or '—' }}</td>
+                <td>
+                    <form method="POST"
+                          action="{{ url_for('interactions.supprimer', id=i.id) }}"
+                          onsubmit="return confirm('Supprimer cette interaction ?')">
+                        <button type="submit" class="btn btn-sm btn-danger">✕</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">Aucune interaction enregistrée.</p>
+    {% endif %}
+</section>
+
+<!-- Danger zone -->
+<section class="section danger-zone">
+    <h2>Zone de danger</h2>
+    <form method="POST" action="{{ url_for('candidatures.supprimer', id=candidature.id) }}"
+          onsubmit="return confirm('Supprimer définitivement cette candidature ?')">
+        <button type="submit" class="btn btn-danger">Supprimer cette candidature</button>
+    </form>
+</section>
+
+{% endblock %}

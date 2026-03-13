@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion — Job Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+<div class="login-box">
+    <h1>🎯 Job Tracker</h1>
+    <p>Suivi de candidatures personnel</p>
+
+    {% if error %}
+        <div class="alert alert-warning">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        <input type="password" name="password" placeholder="Mot de passe" autofocus required>
+        <button type="submit">Accéder</button>
+    </form>
+</div>
+</body>
+</html>

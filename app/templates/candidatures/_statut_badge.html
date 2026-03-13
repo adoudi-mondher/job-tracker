@@ -1,0 +1,16 @@
+<!-- Fragment réutilisable — mis à jour par HTMX sans reload -->
+<div class="statut-wrapper">
+    <span class="badge badge-statut badge-{{ candidature.statut | lower | replace(' ', '-') }}">
+        {{ candidature.statut }}
+    </span>
+    <select
+        hx-post="{{ url_for('candidatures.changer_statut', id=candidature.id) }}"
+        hx-target="#statut-{{ candidature.id }}"
+        hx-swap="innerHTML"
+        name="statut"
+        class="statut-select">
+        {% for s in statuts %}
+        <option value="{{ s }}" {{ 'selected' if candidature.statut == s }}>{{ s }}</option>
+        {% endfor %}
+    </select>
+</div>

@@ -1,0 +1,52 @@
+{% extends "base/layout.html" %}
+{% block title %}Entreprises — Job Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Entreprises</h1>
+    <a href="{{ url_for('entreprises.nouvelle') }}" class="btn btn-primary">+ Nouvelle entreprise</a>
+</div>
+
+{% if entreprises %}
+<table>
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Secteur</th>
+            <th>Localisation</th>
+            <th>Contact</th>
+            <th>Candidatures</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for e in entreprises %}
+        <tr>
+            <td><strong>{{ e.nom }}</strong></td>
+            <td>{{ e.secteur or '—' }}</td>
+            <td>{{ e.localisation or '—' }}</td>
+            <td>
+                {% if e.contact_email %}
+                    <a href="mailto:{{ e.contact_email }}">{{ e.contact_nom or e.contact_email }}</a>
+                {% else %}
+                    {{ e.contact_nom or '—' }}
+                {% endif %}
+            </td>
+            <td>{{ e.candidatures|length }}</td>
+            <td class="actions">
+                <a href="{{ url_for('entreprises.modifier', id=e.id) }}" class="btn btn-sm">Modifier</a>
+                <form method="POST" action="{{ url_for('entreprises.supprimer', id=e.id) }}"
+                      onsubmit="return confirm('Supprimer {{ e.nom }} ?')">
+                    <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <p>Aucune entreprise. <a href="{{ url_for('entreprises.nouvelle') }}">Ajouter la première</a>.</p>
+</div>
+{% endif %}
+{% endblock %}

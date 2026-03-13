@@ -1,0 +1,67 @@
+{% extends "base/layout.html" %}
+{% block title %}Candidatures — Job Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Candidatures</h1>
+    <a href="{{ url_for('candidatures.nouvelle') }}" class="btn btn-primary">+ Nouvelle</a>
+</div>
+
+<!-- Filtres par statut -->
+<div class="filters">
+    <a href="{{ url_for('candidatures.index') }}"
+       class="filter-btn {{ 'active' if not statut_filtre }}">Toutes</a>
+    {% for s in statuts %}
+    <a href="{{ url_for('candidatures.index', statut=s) }}"
+       class="filter-btn {{ 'active' if statut_filtre == s }}">{{ s }}</a>
+    {% endfor %}
+</div>
+
+{% if candidatures %}
+<table>
+    <thead>
+        <tr>
+            <th>Entreprise</th>
+            <th>Poste</th>
+            <th>Type</th>
+            <th>Envoyée le</th>
+            <th>Statut</th>
+            <th>Relance</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in candidatures %}
+        <tr>
+            <td><strong>{{ c.entreprise.nom }}</strong><br>
+                <small>{{ c.entreprise.localisation or '' }}</small>
+            </td>
+            <td>{{ c.poste }}</td>
+            <td><span class="badge">{{ c.type_contrat }}</span></td>
+            <td>{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
+            <td id="statut-{{ c.id }}">
+                {% include 'candidatures/_statut_badge.html' %}
+            </td>
+            <td>
+                {% if c.relance_due %}
+                    <span class="badge badge-warning">⚠️ Due</span>
+                {% elif c.date_relance %}
+                    {{ c.date_relance.strftime('%d/%m') }}
+                {% else %}—{% endif %}
+            </td>
+            <td>
+                <a href="{{ url_for('candidatures.detail', id=c.id) }}" class="btn btn-sm">Voir</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <p>Aucune candidature
+       {{ 'avec le statut "' + statut_filtre + '"' if statut_filtre else '' }}.
+       <a href="{{ url_for('candidatures.nouvelle') }}">En ajouter une</a>.
+    </p>
+</div>
+{% endif %}
+{% endblock %}
