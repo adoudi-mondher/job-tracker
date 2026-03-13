@@ -68,6 +68,28 @@ Authorization: Bearer <APP_PASSWORD>
 
 `À envoyer` → `Envoyée` → `Relance` → `Entretien` → `Refus` → `Abandonné`
 
+## Déploiement VPS
+
+Stack : Docker + Nginx Proxy Manager sur Debian.
+
+### Premier déploiement
+```bash
+cd /opt/docker
+git clone https://github.com/adoudi-mondher/job-tracker.git
+cd job-tracker
+cp .env.example .env
+nano .env
+docker compose up -d --build
+```
+
+### Mises à jour
+```bash
+cd /opt/docker/job-tracker && deploy
+```
+
+> `deploy` est un alias défini dans `~/.bashrc` :
+> `alias deploy='git pull && docker compose down && docker compose up -d --build'`
+
 ## Licence
 
 MIT — fork librement.
