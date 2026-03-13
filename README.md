@@ -16,7 +16,7 @@ Fork-friendly : clone, configure, lance.
 ## Installation
 
 ```bash
-git clone https://github.com/ton-repo/job-tracker
+git clone https://github.com/adoudi-mondher/job-tracker.git
 cd job-tracker
 
 python -m venv venv
