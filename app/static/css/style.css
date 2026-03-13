@@ -241,3 +241,28 @@ dd { font-size: .9rem; }
 .login-box p  { color: #6b7280; margin-bottom: 1.5rem; }
 .login-box input { margin-bottom: 1rem; }
 .login-box button { width: 100%; padding: .65rem; font-size: 1rem; }
+
+/* ===== CHARTS ===== */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.chart-card h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid #f0f2f5;
+}
+.chart-wrapper {
+    position: relative;
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+@media (max-width: 640px) {
+    .charts-grid { grid-template-columns: 1fr; }
+}

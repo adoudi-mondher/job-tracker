@@ -27,6 +27,22 @@
     </div>
 </div>
 
+<!-- Graphiques -->
+<div class="charts-grid">
+    <div class="card chart-card">
+        <h2>Répartition par statut</h2>
+        <div class="chart-wrapper">
+            <canvas id="donutChart"></canvas>
+        </div>
+    </div>
+    <div class="card chart-card">
+        <h2>Candidatures par semaine</h2>
+        <div class="chart-wrapper">
+            <canvas id="barChart"></canvas>
+        </div>
+    </div>
+</div>
+
 <!-- Relances dues -->
 {% if relances_dues %}
 <section class="section">
@@ -48,9 +64,7 @@
                 <td>{{ c.poste }}</td>
                 <td>{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
                 <td><span class="badge badge-warning">J+{{ c.jours_depuis_envoi }}</span></td>
-                <td>
-                    <a href="{{ url_for('candidatures.detail', id=c.id) }}" class="btn btn-sm">Voir</a>
-                </td>
+                <td><a href="{{ url_for('candidatures.detail', id=c.id) }}" class="btn btn-sm">Voir</a></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -85,4 +99,60 @@
 </section>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const donutCtx = document.getElementById('donutChart').getContext('2d');
+new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ donut_labels | tojson }},
+        datasets: [{
+            data: {{ donut_data | tojson }},
+            backgroundColor: {{ donut_colors | tojson }},
+            borderWidth: 2,
+            borderColor: '#fff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { font: { size: 12 }, padding: 12 }
+            }
+        }
+    }
+});
+
+const barCtx = document.getElementById('barChart').getContext('2d');
+new Chart(barCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ semaines_labels | tojson }},
+        datasets: [{
+            label: 'Candidatures',
+            data: {{ semaines_data | tojson }},
+            backgroundColor: '#3b5bdb',
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                grid: { color: '#f0f2f5' }
+            },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
 {% endblock %}
