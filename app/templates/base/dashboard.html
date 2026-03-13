@@ -27,22 +27,6 @@
     </div>
 </div>
 
-<!-- Graphiques -->
-<div class="charts-grid">
-    <div class="card chart-card">
-        <h2>Répartition par statut</h2>
-        <div class="chart-wrapper">
-            <canvas id="donutChart"></canvas>
-        </div>
-    </div>
-    <div class="card chart-card">
-        <h2>Candidatures par semaine</h2>
-        <div class="chart-wrapper">
-            <canvas id="barChart"></canvas>
-        </div>
-    </div>
-</div>
-
 <!-- Relances dues -->
 {% if relances_dues %}
 <section class="section">
@@ -99,10 +83,26 @@
 </section>
 {% endif %}
 
+<!-- Graphiques -->
+<div class="charts-grid">
+    <div class="card chart-card">
+        <h2>Répartition par statut</h2>
+        <div class="chart-wrapper">
+            <canvas id="donutChart"></canvas>
+        </div>
+    </div>
+    <div class="card chart-card">
+        <h2>Candidatures par semaine</h2>
+        <div class="chart-wrapper">
+            <canvas id="barChart"></canvas>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const donutCtx = document.getElementById('donutChart').getContext('2d');
 new Chart(donutCtx, {
