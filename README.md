@@ -16,7 +16,7 @@ Fork-friendly : clone, configure, lance.
 ## Installation
 
 ```bash
-git clone https://github.com/adoudi-mondher/job-tracker.git
+git clone https://github.com/ton-repo/job-tracker
 cd job-tracker
 
 python -m venv venv
@@ -67,12 +67,6 @@ Authorization: Bearer <APP_PASSWORD>
 ## Statuts disponibles
 
 `À envoyer` → `Envoyée` → `Relance` → `Entretien` → `Refus` → `Abandonné`
-
-## Roadmap
-
-- [ ] Graphiques stats dashboard (Chart.js) — évolution candidatures par semaine, répartition par statut
-- [ ] Déploiement VPS Debian (Gunicorn + Nginx)
-- [ ] Automation relances via n8n self-hosted
 
 ## Licence
 
