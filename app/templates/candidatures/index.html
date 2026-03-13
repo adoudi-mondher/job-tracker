@@ -40,7 +40,7 @@
             <td><span class="badge">{{ c.type_contrat }}</span></td>
             <td>{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
             <td id="statut-{{ c.id }}">
-                {% include 'candidatures/_statut_badge.html' %}
+                {% with candidature = c %}{% include 'candidatures/_statut_badge.html' %}{% endwith %}
             </td>
             <td>
                 {% if c.relance_due %}
