@@ -73,11 +73,24 @@ Authorization: Bearer <APP_PASSWORD>
 
 `À envoyer` → `Envoyée` → `Relance` → `Entretien` → `Refus` → `Abandonné`
 
-## Déploiement VPS
+## Déploiement
 
-Stack : Docker + Nginx Proxy Manager sur Debian.
+L'app fonctionne parfaitement en local — c'est le cas d'usage le plus simple.
 
-### Premier déploiement
+### Usage local (recommandé pour démarrer)
+
+```bash
+python run.py
+```
+
+Ouvre `http://localhost:5000` — c'est tout.
+
+### Déploiement VPS (optionnel)
+
+Si tu veux accéder à ton tracker depuis n'importe où ou activer l'automation, tu peux le déployer sur un VPS.
+
+Pour ma part j'utilise **Docker + Nginx Proxy Manager sur Debian**, mais n'importe quelle infra compatible Python/Docker convient.
+
 ```bash
 cd /opt/docker
 git clone https://github.com/adoudi-mondher/job-tracker.git
@@ -87,13 +100,13 @@ nano .env
 docker compose up -d --build
 ```
 
-### Mises à jour
+Pour les mises à jour, j'utilise un alias `deploy` défini dans `~/.bashrc` :
+
 ```bash
-cd /opt/docker/job-tracker && deploy
+alias deploy='git pull && docker compose down && docker compose up -d --build'
 ```
 
-> `deploy` est un alias défini dans `~/.bashrc` :
-> `alias deploy='git pull && docker compose down && docker compose up -d --build'`
+Usage : `cd /opt/docker/job-tracker && deploy`
 
 ## Licence
 
