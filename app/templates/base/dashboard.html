@@ -102,7 +102,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
 <script>
 const donutCtx = document.getElementById('donutChart').getContext('2d');
 new Chart(donutCtx, {
