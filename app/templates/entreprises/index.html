@@ -8,7 +8,7 @@
 </div>
 
 {% if entreprises %}
-<table>
+<div class="table-wrapper"><table>
     <thead>
         <tr>
             <th>Nom</th>
@@ -43,7 +43,7 @@
         </tr>
         {% endfor %}
     </tbody>
-</table>
+</table></div>
 {% else %}
 <div class="empty-state">
     <p>Aucune entreprise. <a href="{{ url_for('entreprises.nouvelle') }}">Ajouter la première</a>.</p>

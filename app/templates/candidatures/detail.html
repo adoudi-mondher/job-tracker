@@ -96,7 +96,7 @@
     </div>
 
     {% if candidature.interactions %}
-    <table>
+    <div class="table-wrapper"><table>
         <thead>
             <tr><th>Date</th><th>Type</th><th>Notes</th><th></th></tr>
         </thead>
@@ -116,7 +116,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
+    </table></div>
     {% else %}
     <p class="empty-state">Aucune interaction enregistrée.</p>
     {% endif %}

@@ -31,7 +31,7 @@
 {% if relances_dues %}
 <section class="section">
     <h2>⚠️ Relances à faire ({{ relances_dues|length }})</h2>
-    <table>
+    <div class="table-wrapper"><table>
         <thead>
             <tr>
                 <th>Entreprise</th>
@@ -52,7 +52,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
+    </table></div>
 </section>
 {% endif %}
 
@@ -60,7 +60,7 @@
 {% if interactions_recentes %}
 <section class="section">
     <h2>🕐 Dernières interactions</h2>
-    <table>
+    <div class="table-wrapper"><table>
         <thead>
             <tr>
                 <th>Date</th>
@@ -79,7 +79,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
+    </table></div>
 </section>
 {% endif %}
 
