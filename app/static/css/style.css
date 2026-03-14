@@ -321,22 +321,31 @@ dd { font-size: .9rem; }
     justify-content: center;
     min-height: 100vh;
     background: #f4f6fb;
-    padding: 1rem;
+    padding: 1.5rem 1rem;
 }
 .login-box {
     background: #fff;
     border-radius: 12px;
-    padding: 2rem;
+    padding: 2rem 1.5rem;
     width: 100%;
-    max-width: 360px;
+    max-width: 420px;
     border: 1px solid #e8eaf0;
     box-shadow: 0 4px 20px rgba(0,0,0,.08);
     text-align: center;
 }
-.login-box h1 { font-size: 1.8rem; margin-bottom: .5rem; }
-.login-box p  { color: #6b7280; margin-bottom: 1.5rem; }
-.login-box input { margin-bottom: 1rem; }
-.login-box button { width: 100%; padding: .65rem; font-size: 1rem; }
+.login-box h1 { font-size: 2rem; margin-bottom: .5rem; }
+.login-box p  { color: #6b7280; margin-bottom: 1.5rem; font-size: 1rem; }
+.login-box input {
+    margin-bottom: 1rem;
+    padding: .75rem 1rem;
+    font-size: 1rem;
+}
+.login-box button {
+    width: 100%;
+    padding: .85rem;
+    font-size: 1.05rem;
+    border-radius: 8px;
+}
 
 /* ===== CHARTS ===== */
 .charts-grid {
