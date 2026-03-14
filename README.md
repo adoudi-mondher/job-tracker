@@ -1,6 +1,6 @@
 # Job Tracker 🎯
 
-Dashboard de suivi de candidatures — Flask + SQLite + n8n automation.
+Dashboard de suivi de candidatures — Flask + SQLite + HTMX.
 
 Développé dans le cadre d'une recherche d'alternance MOA/PO.  
 Fork-friendly : clone, configure, lance.
@@ -10,8 +10,13 @@ Fork-friendly : clone, configure, lance.
 - **Backend** : Flask 3 + SQLAlchemy + Flask-Migrate
 - **Frontend** : Jinja2 + HTMX
 - **BDD** : SQLite (dev) / PostgreSQL (prod)
-- **Automation** : n8n self-hosted via API REST
 - **Déploiement** : Gunicorn + Nginx sur Debian
+
+## Automation (optionnel)
+
+L'app expose une API REST qui permet d'automatiser le suivi des candidatures — relances automatiques, changements de statut, notifications.
+
+Personnellement j'utilise **n8n self-hosted** couplé à de l'IA pour automatiser une partie de ce process. Si ça t'intéresse, ça peut te donner des idées pour construire ta propre stack d'automation par-dessus ce projet.
 
 ## Installation
 
