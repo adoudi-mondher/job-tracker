@@ -18,7 +18,7 @@
             <label>Secteur</label>
             <select name="secteur">
                 <option value="">— Choisir —</option>
-                {% for s in ['Énergie', 'BTP', 'Industrie', 'Startup', 'Telecom', 'Banque/Assurance', 'Autre'] %}
+                {% for s in ['Énergie', 'BTP', 'Industrie', 'ESN', 'Startup', 'Telecom', 'Banque/Assurance', 'Autre'] %}
                 <option value="{{ s }}" {{ 'selected' if entreprise and entreprise.secteur == s }}>{{ s }}</option>
                 {% endfor %}
             </select>
