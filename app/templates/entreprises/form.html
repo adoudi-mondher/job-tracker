@@ -26,7 +26,7 @@
         <div class="form-group">
             <label>Localisation</label>
             <input type="text" name="localisation"
-                   value="{{ entreprise.localisation if entreprise else '' }}"
+                   value="{{ entreprise.localisation if entreprise and entreprise.localisation else '' }}"
                    placeholder="Metz, Nancy, Paris...">
         </div>
     </div>
@@ -34,7 +34,7 @@
     <div class="form-group">
         <label>Site web</label>
         <input type="url" name="site_web"
-               value="{{ entreprise.site_web if entreprise else '' }}"
+               value="{{ entreprise.site_web if entreprise and entreprise.site_web else '' }}"
                placeholder="https://...">
     </div>
 
@@ -42,12 +42,12 @@
         <div class="form-group">
             <label>Nom du contact</label>
             <input type="text" name="contact_nom"
-                   value="{{ entreprise.contact_nom if entreprise else '' }}">
+                   value="{{ entreprise.contact_nom if entreprise and entreprise.contact_nom else '' }}">
         </div>
         <div class="form-group">
             <label>Email du contact</label>
             <input type="email" name="contact_email"
-                   value="{{ entreprise.contact_email if entreprise else '' }}">
+                   value="{{ entreprise.contact_email if entreprise and entreprise.contact_email else '' }}">
         </div>
     </div>
 
