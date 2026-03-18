@@ -44,7 +44,7 @@ class Candidature(db.Model):
     type_contrat      = db.Column(db.String(20), default='Alternance')
     date_envoi        = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
     statut            = db.Column(db.String(20), default='À envoyer')
-    lien_offre        = db.Column(db.String(255))
+    lien_offre        = db.Column(db.String(2000))
     lm_fichier        = db.Column(db.String(255))  # nom du fichier PDF LM
     date_relance      = db.Column(db.Date)          # calculée auto ou saisie
     date_modification = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
