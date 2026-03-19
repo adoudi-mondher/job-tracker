@@ -9,7 +9,10 @@ entreprises_bp = Blueprint('entreprises', __name__)
 @entreprises_bp.route('/')
 @login_required
 def index():
-    entreprises = Entreprise.query.order_by(Entreprise.nom).all()
+    page = request.args.get('page', 1, type=int)
+    entreprises = Entreprise.query.order_by(Entreprise.nom).paginate(
+        page=page, per_page=20, error_out=False
+    )
     return render_template('entreprises/index.html', entreprises=entreprises)
 
 

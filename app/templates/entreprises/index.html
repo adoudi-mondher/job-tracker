@@ -7,7 +7,7 @@
     <a href="{{ url_for('entreprises.nouvelle') }}" class="btn btn-primary">+ Nouvelle entreprise</a>
 </div>
 
-{% if entreprises %}
+{% if entreprises.items %}
 <div class="table-wrapper"><table>
     <thead>
         <tr>
@@ -20,7 +20,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for e in entreprises %}
+        {% for e in entreprises.items %}
         <tr>
             <td><strong>{{ e.nom }}</strong></td>
             <td>{{ e.secteur or '—' }}</td>
@@ -44,6 +44,17 @@
         {% endfor %}
     </tbody>
 </table></div>
+
+<div class="pagination">
+    {% if entreprises.has_prev %}
+        <a href="{{ url_for('entreprises.index', page=entreprises.prev_num) }}" class="btn btn-sm">← Précédent</a>
+    {% endif %}
+    <span>Page {{ entreprises.page }} / {{ entreprises.pages }}</span>
+    {% if entreprises.has_next %}
+        <a href="{{ url_for('entreprises.index', page=entreprises.next_num) }}" class="btn btn-sm">Suivant →</a>
+    {% endif %}
+</div>
+
 {% else %}
 <div class="empty-state">
     <p>Aucune entreprise. <a href="{{ url_for('entreprises.nouvelle') }}">Ajouter la première</a>.</p>
