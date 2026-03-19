@@ -24,6 +24,7 @@ def nouvelle():
             site_web      = request.form.get('site_web'),
             contact_nom   = request.form.get('contact_nom'),
             contact_email = request.form.get('contact_email'),
+            notes = request.form.get('notes'),
         )
         db.session.add(entreprise)
         db.session.commit()
@@ -43,6 +44,7 @@ def modifier(id):
         entreprise.site_web      = request.form.get('site_web')
         entreprise.contact_nom   = request.form.get('contact_nom')
         entreprise.contact_email = request.form.get('contact_email')
+        entreprise.notes = request.form.get('notes')
         db.session.commit()
         flash(f'Entreprise "{entreprise.nom}" mise à jour.', 'success')
         return redirect(url_for('entreprises.index'))

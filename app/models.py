@@ -12,6 +12,7 @@ class Entreprise(db.Model):
     site_web      = db.Column(db.String(255))
     contact_nom   = db.Column(db.String(100))
     contact_email = db.Column(db.String(150))
+    notes = db.Column(db.Text)
 
     # Relation : une entreprise → plusieurs candidatures
     candidatures  = db.relationship('Candidature', backref='entreprise', lazy=True,
