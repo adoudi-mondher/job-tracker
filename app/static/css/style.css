@@ -37,16 +37,6 @@ nav {
 .nav-links a:hover { color: #fff; background: rgba(255,255,255,.08); text-decoration: none; }
 .nav-logout { color: #ff6b6b !important; }
 
-.pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    font-size: .9rem;
-    color: #6b7280;
-}
-
 @media (min-width: 480px) {
     nav { padding: 0 1.5rem; }
     .nav-brand { font-size: 1.1rem; }
@@ -382,4 +372,66 @@ dd { font-size: .9rem; }
 }
 @media (min-width: 640px) {
     .chart-wrapper { height: 260px; }
+}
+
+/* ===== OFFRES / DÉCOUVRIR ===== */
+.offres-filters {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1.25rem;
+    border: 1px solid #e8eaf0;
+    margin-bottom: 1.5rem;
+}
+.filter-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+.filter-row .form-group {
+    flex: 1;
+    min-width: 140px;
+    margin-bottom: 0;
+}
+.section-desc {
+    color: #6b7280;
+    font-size: .875rem;
+    margin-bottom: 1rem;
+    margin-top: -.5rem;
+}
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+.offre-card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e8eaf0;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.offre-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .5rem;
+}
+.offre-card-header strong { font-size: .95rem; }
+.offre-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    font-size: .85rem;
+    color: #374151;
+    flex: 1;
+}
+.offre-card-body .text-muted { color: #9ca3af; font-size: .8rem; }
+.offre-card-footer {
+    display: flex;
+    gap: .5rem;
+    margin-top: .25rem;
 }

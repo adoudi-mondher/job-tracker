@@ -1,0 +1,120 @@
+{% extends "base/layout.html" %}
+{% block title %}Découvrir des offres — Job Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Découvrir</h1>
+    <span class="badge" style="font-size:.85rem; padding:.4rem .8rem;">
+        Powered by La Bonne Alternance
+    </span>
+</div>
+
+<!-- Filtres -->
+<form method="GET" class="offres-filters">
+    <div class="filter-row">
+        <div class="form-group">
+            <label>Latitude</label>
+            <input type="text" name="latitude" value="{{ params.latitude }}">
+        </div>
+        <div class="form-group">
+            <label>Longitude</label>
+            <input type="text" name="longitude" value="{{ params.longitude }}">
+        </div>
+        <div class="form-group">
+            <label>Rayon (km)</label>
+            <input type="number" name="radius" value="{{ params.radius }}" min="5" max="100">
+        </div>
+        <div class="form-group">
+            <label>Codes ROME</label>
+            <input type="text" name="romes" value="{{ params.romes }}" placeholder="M1806,M1803,M1805">
+        </div>
+        <div class="form-group" style="align-self: flex-end;">
+            <button type="submit" class="btn btn-primary">Rechercher</button>
+        </div>
+    </div>
+</form>
+
+<!-- Offres formelles -->
+{% if jobs %}
+<section class="section">
+    <h2>📋 Offres publiées ({{ jobs|length }})</h2>
+    <div class="cards-grid">
+        {% for job in jobs %}
+        <div class="offre-card">
+            <div class="offre-card-header">
+                <strong>{{ job.offer.title if job.offer else 'Poste non précisé' }}</strong>
+                <span class="badge badge-envoyée">{{ job.contract.type | join(', ') if job.contract.type else 'NC' }}</span>
+            </div>
+            <div class="offre-card-body">
+                <p>🏢 {{ job.workplace.name }}</p>
+                <p>📍 {{ job.workplace.location.address }}</p>
+                {% if job.offer and job.offer.target_diploma %}
+                <p>🎓 {{ job.offer.target_diploma.label }}</p>
+                {% endif %}
+            </div>
+            <div class="offre-card-footer">
+                {% if job.apply.url %}
+                <a href="{{ job.apply.url }}" target="_blank" class="btn btn-sm btn-primary">Voir l'offre ↗</a>
+                {% endif %}
+                <form method="POST" action="{{ url_for('offres.ajouter') }}">
+                    <input type="hidden" name="nom"          value="{{ job.workplace.name }}">
+                    <input type="hidden" name="localisation" value="{{ job.workplace.location.address }}">
+                    <input type="hidden" name="site_web"     value="{{ job.workplace.website or '' }}">
+                    <input type="hidden" name="lien_offre"   value="{{ job.apply.url or '' }}">
+                    <input type="hidden" name="naf_label"    value="{{ job.workplace.domain.naf.label if job.workplace.domain and job.workplace.domain.naf else '' }}">
+                    <button type="submit" class="btn btn-sm">+ Pipeline</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Recruteurs spontanés -->
+{% if recruiters %}
+<section class="section">
+    <h2>🎯 Candidatures spontanées suggérées ({{ recruiters|length }})</h2>
+    <p class="section-desc">Entreprises identifiées comme ayant un fort potentiel d'embauche en alternance, sans offre publiée.</p>
+    <div class="cards-grid">
+        {% for r in recruiters %}
+        <div class="offre-card">
+            <div class="offre-card-header">
+                <strong>{{ r.workplace.brand or r.workplace.name }}</strong>
+                <span class="badge">{{ r.workplace.size or 'NC' }} salariés</span>
+            </div>
+            <div class="offre-card-body">
+                <p>📍 {{ r.workplace.location.address }}</p>
+                {% if r.workplace.domain and r.workplace.domain.naf %}
+                <p>🏭 {{ r.workplace.domain.naf.label }}</p>
+                {% endif %}
+                {% if r.workplace.domain and r.workplace.domain.opco %}
+                <p class="text-muted">OPCO : {{ r.workplace.domain.opco }}</p>
+                {% endif %}
+            </div>
+            <div class="offre-card-footer">
+                {% if r.apply.url %}
+                <a href="{{ r.apply.url }}" target="_blank" class="btn btn-sm">Voir ↗</a>
+                {% endif %}
+                <form method="POST" action="{{ url_for('offres.ajouter') }}">
+                    <input type="hidden" name="nom"          value="{{ r.workplace.brand or r.workplace.name }}">
+                    <input type="hidden" name="localisation" value="{{ r.workplace.location.address }}">
+                    <input type="hidden" name="site_web"     value="{{ r.workplace.website or '' }}">
+                    <input type="hidden" name="lien_offre"   value="{{ r.apply.url or '' }}">
+                    <input type="hidden" name="naf_label"    value="{{ r.workplace.domain.naf.label if r.workplace.domain and r.workplace.domain.naf else '' }}">
+                    <button type="submit" class="btn btn-sm btn-primary">+ Pipeline</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if not jobs and not recruiters %}
+<div class="empty-state">
+    <p>Aucun résultat pour ces critères. Essaie d'élargir le rayon ou de modifier les codes ROME.</p>
+</div>
+{% endif %}
+
+{% endblock %}
