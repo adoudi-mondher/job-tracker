@@ -7,6 +7,16 @@
     <a href="{{ url_for('entreprises.nouvelle') }}" class="btn btn-primary">+ Nouvelle entreprise</a>
 </div>
 
+<!-- Filtres par secteur -->
+<div class="filters">
+    <a href="{{ url_for('entreprises.index') }}"
+       class="filter-btn {{ 'active' if not secteur_filtre }}">Toutes</a>
+    {% for s in secteurs %}
+    <a href="{{ url_for('entreprises.index', secteur=s) }}"
+       class="filter-btn {{ 'active' if secteur_filtre == s }}">{{ s }}</a>
+    {% endfor %}
+</div>
+
 {% if entreprises.items %}
 <div class="table-wrapper"><table>
     <thead>
@@ -45,19 +55,25 @@
     </tbody>
 </table></div>
 
+<!-- Pagination -->
 <div class="pagination">
     {% if entreprises.has_prev %}
-        <a href="{{ url_for('entreprises.index', page=entreprises.prev_num) }}" class="btn btn-sm">← Précédent</a>
+        <a href="{{ url_for('entreprises.index', page=entreprises.prev_num, secteur=secteur_filtre) }}" class="btn btn-sm">← Précédent</a>
     {% endif %}
-    <span>Page {{ entreprises.page }} / {{ entreprises.pages }}</span>
+    <span>Page {{ entreprises.page }} / {{ entreprises.pages }} — {{ entreprises.total }} entreprises</span>
     {% if entreprises.has_next %}
-        <a href="{{ url_for('entreprises.index', page=entreprises.next_num) }}" class="btn btn-sm">Suivant →</a>
+        <a href="{{ url_for('entreprises.index', page=entreprises.next_num, secteur=secteur_filtre) }}" class="btn btn-sm">Suivant →</a>
     {% endif %}
 </div>
 
 {% else %}
 <div class="empty-state">
-    <p>Aucune entreprise. <a href="{{ url_for('entreprises.nouvelle') }}">Ajouter la première</a>.</p>
+    <p>Aucune entreprise
+       {{ 'dans le secteur "' + secteur_filtre + '"' if secteur_filtre else '' }}.
+       {% if not secteur_filtre %}
+       <a href="{{ url_for('entreprises.nouvelle') }}">Ajouter la première</a>.
+       {% endif %}
+    </p>
 </div>
 {% endif %}
 {% endblock %}

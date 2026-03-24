@@ -9,11 +9,25 @@ entreprises_bp = Blueprint('entreprises', __name__)
 @entreprises_bp.route('/')
 @login_required
 def index():
-    page = request.args.get('page', 1, type=int)
-    entreprises = Entreprise.query.order_by(Entreprise.nom).paginate(
-        page=page, per_page=20, error_out=False
+    page    = request.args.get('page', 1, type=int)
+    secteur = request.args.get('secteur')
+
+    query = Entreprise.query.order_by(Entreprise.nom)
+    if secteur:
+        query = query.filter_by(secteur=secteur)
+
+    entreprises = query.paginate(page=page, per_page=20, error_out=False)
+
+    # Liste des secteurs distincts pour les filtres
+    secteurs = [r[0] for r in db.session.query(Entreprise.secteur)
+                .filter(Entreprise.secteur.isnot(None))
+                .distinct().order_by(Entreprise.secteur).all()]
+
+    return render_template('entreprises/index.html',
+        entreprises=entreprises,
+        secteurs=secteurs,
+        secteur_filtre=secteur,
     )
-    return render_template('entreprises/index.html', entreprises=entreprises)
 
 
 @entreprises_bp.route('/nouvelle', methods=['GET', 'POST'])
@@ -27,7 +41,6 @@ def nouvelle():
             site_web      = request.form.get('site_web'),
             contact_nom   = request.form.get('contact_nom'),
             contact_email = request.form.get('contact_email'),
-            notes = request.form.get('notes'),
         )
         db.session.add(entreprise)
         db.session.commit()
@@ -47,7 +60,6 @@ def modifier(id):
         entreprise.site_web      = request.form.get('site_web')
         entreprise.contact_nom   = request.form.get('contact_nom')
         entreprise.contact_email = request.form.get('contact_email')
-        entreprise.notes = request.form.get('notes')
         db.session.commit()
         flash(f'Entreprise "{entreprise.nom}" mise à jour.', 'success')
         return redirect(url_for('entreprises.index'))
