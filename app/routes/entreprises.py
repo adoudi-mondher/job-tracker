@@ -21,6 +21,7 @@ def index():
     # Liste des secteurs distincts pour les filtres
     secteurs = [r[0] for r in db.session.query(Entreprise.secteur)
                 .filter(Entreprise.secteur.isnot(None))
+                .filter(Entreprise.secteur != '')
                 .distinct().order_by(Entreprise.secteur).all()]
 
     return render_template('entreprises/index.html',
