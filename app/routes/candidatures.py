@@ -10,18 +10,20 @@ candidatures_bp = Blueprint('candidatures', __name__)
 @candidatures_bp.route('/')
 @login_required
 def index():
+    page   = request.args.get('page', 1, type=int)
     statut = request.args.get('statut')
+
+    query = Candidature.query.order_by(Candidature.date_envoi.desc())
     if statut:
-        candidatures = Candidature.query.filter_by(statut=statut).order_by(
-            Candidature.date_envoi.desc()).all()
-    else:
-        candidatures = Candidature.query.order_by(Candidature.date_envoi.desc()).all()
+        query = query.filter_by(statut=statut)
+
+    candidatures = query.paginate(page=page, per_page=20, error_out=False)
+
     return render_template('candidatures/index.html',
         candidatures=candidatures,
         statuts=Candidature.STATUTS,
         statut_filtre=statut,
     )
-
 
 @candidatures_bp.route('/<int:id>')
 @login_required

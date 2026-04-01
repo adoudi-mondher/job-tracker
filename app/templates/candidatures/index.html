@@ -17,7 +17,7 @@
     {% endfor %}
 </div>
 
-{% if candidatures %}
+{% if candidatures.items %}
 <div class="table-wrapper"><table>
     <thead>
         <tr>
@@ -31,7 +31,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for c in candidatures %}
+        {% for c in candidatures.items %}
         <tr>
             <td><strong>{{ c.entreprise.nom }}</strong><br>
                 <small>{{ c.entreprise.localisation or '' }}</small>
@@ -56,6 +56,17 @@
         {% endfor %}
     </tbody>
 </table></div>
+
+<div class="pagination">
+    {% if candidatures.has_prev %}
+        <a href="{{ url_for('candidatures.index', page=candidatures.prev_num, statut=statut_filtre) }}" class="btn btn-sm">← Précédent</a>
+    {% endif %}
+    <span>Page {{ candidatures.page }} / {{ candidatures.pages }} — {{ candidatures.total }} candidatures</span>
+    {% if candidatures.has_next %}
+        <a href="{{ url_for('candidatures.index', page=candidatures.next_num, statut=statut_filtre) }}" class="btn btn-sm">Suivant →</a>
+    {% endif %}
+</div>
+
 {% else %}
 <div class="empty-state">
     <p>Aucune candidature
