@@ -5,7 +5,6 @@ from app.routes.main import login_required
 
 entreprises_bp = Blueprint('entreprises', __name__)
 
-
 @entreprises_bp.route('/')
 @login_required
 def index():
@@ -30,7 +29,6 @@ def index():
         secteur_filtre=secteur,
     )
 
-
 @entreprises_bp.route('/nouvelle', methods=['GET', 'POST'])
 @login_required
 def nouvelle():
@@ -49,7 +47,6 @@ def nouvelle():
         return redirect(url_for('entreprises.index'))
     return render_template('entreprises/form.html', entreprise=None)
 
-
 @entreprises_bp.route('/<int:id>/modifier', methods=['GET', 'POST'])
 @login_required
 def modifier(id):
@@ -66,7 +63,6 @@ def modifier(id):
         return redirect(url_for('entreprises.index'))
     return render_template('entreprises/form.html', entreprise=entreprise)
 
-
 @entreprises_bp.route('/<int:id>/supprimer', methods=['POST'])
 @login_required
 def supprimer(id):
@@ -75,3 +71,24 @@ def supprimer(id):
     db.session.commit()
     flash(f'Entreprise "{entreprise.nom}" supprimée.', 'warning')
     return redirect(url_for('entreprises.index'))
+
+@entreprises_bp.route('/export')
+@login_required
+def export():
+    import csv
+    import io
+    from flask import Response
+
+    entreprises = Entreprise.query.order_by(Entreprise.nom).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Nom', 'Secteur', 'Localisation', 'Site web',
+                     'Contact nom', 'Contact email', 'Notes', 'Candidatures'])
+    for e in entreprises:
+        writer.writerow([e.nom, e.secteur or '', e.localisation or '',
+                         e.site_web or '', e.contact_nom or '',
+                         e.contact_email or '', e.notes or '',
+                         len(e.candidatures)])
+    output.seek(0)
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=entreprises.csv'})

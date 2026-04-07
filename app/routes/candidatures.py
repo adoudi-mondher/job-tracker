@@ -6,7 +6,6 @@ from app.routes.main import login_required
 
 candidatures_bp = Blueprint('candidatures', __name__)
 
-
 @candidatures_bp.route('/')
 @login_required
 def index():
@@ -33,7 +32,6 @@ def detail(id):
         candidature=candidature,
         statuts=Candidature.STATUTS,
     )
-
 
 @candidatures_bp.route('/nouvelle', methods=['GET', 'POST'])
 @login_required
@@ -64,7 +62,6 @@ def nouvelle():
         today=datetime.utcnow().strftime('%Y-%m-%d'),
     )
 
-
 @candidatures_bp.route('/<int:id>/modifier', methods=['GET', 'POST'])
 @login_required
 def modifier(id):
@@ -90,7 +87,6 @@ def modifier(id):
         today=datetime.utcnow().strftime('%Y-%m-%d'),
     )
 
-
 @candidatures_bp.route('/<int:id>/statut', methods=['POST'])
 @login_required
 def changer_statut(id):
@@ -105,7 +101,6 @@ def changer_statut(id):
         statuts=Candidature.STATUTS,
     )
 
-
 @candidatures_bp.route('/<int:id>/supprimer', methods=['POST'])
 @login_required
 def supprimer(id):
@@ -114,3 +109,31 @@ def supprimer(id):
     db.session.commit()
     flash('Candidature supprimée.', 'warning')
     return redirect(url_for('candidatures.index'))
+
+@candidatures_bp.route('/export')
+@login_required
+def export():
+    import csv
+    import io
+    from flask import Response
+
+    candidatures = Candidature.query.order_by(Candidature.date_envoi.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Entreprise', 'Secteur', 'Localisation', 'Poste',
+                     'Type contrat', 'Date envoi', 'Statut', 'Date relance',
+                     'Lien offre', 'Fichier LM', 'Notes'])
+    for c in candidatures:
+        writer.writerow([
+            c.entreprise.nom if c.entreprise else '',
+            c.entreprise.secteur if c.entreprise else '',
+            c.entreprise.localisation if c.entreprise else '',
+            c.poste, c.type_contrat or '',
+            c.date_envoi.strftime('%d/%m/%Y') if c.date_envoi else '',
+            c.statut or '',
+            c.date_relance.strftime('%d/%m/%Y') if c.date_relance else '',
+            c.lien_offre or '', c.lm_fichier or '', c.notes or '',
+        ])
+    output.seek(0)
+    return Response(output.getvalue(), mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=candidatures.csv'})
