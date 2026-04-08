@@ -10,10 +10,13 @@ entreprises_bp = Blueprint('entreprises', __name__)
 def index():
     page    = request.args.get('page', 1, type=int)
     secteur = request.args.get('secteur')
+    localisation = request.args.get('localisation')
 
     query = Entreprise.query.order_by(Entreprise.nom)
     if secteur:
         query = query.filter_by(secteur=secteur)
+    if localisation:
+        query = query.filter(Entreprise.localisation.ilike(f'%{localisation}%'))
 
     entreprises = query.paginate(page=page, per_page=20, error_out=False)
 
@@ -27,6 +30,7 @@ def index():
         entreprises=entreprises,
         secteurs=secteurs,
         secteur_filtre=secteur,
+        localisation_filtre=localisation,
     )
 
 @entreprises_bp.route('/nouvelle', methods=['GET', 'POST'])

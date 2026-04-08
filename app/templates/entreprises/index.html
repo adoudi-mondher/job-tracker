@@ -18,6 +18,21 @@
     {% endfor %}
 </div>
 
+<!-- Filtres par location -->
+<form method="GET" style="margin-bottom: 1rem; display:flex; gap:.5rem;">
+    {% if secteur_filtre %}
+    <input type="hidden" name="secteur" value="{{ secteur_filtre }}">
+    {% endif %}
+    <input type="text" name="localisation" 
+           value="{{ request.args.get('localisation', '') }}"
+           placeholder="Rechercher par localisation..." 
+           style="max-width: 280px;">
+    <button type="submit" class="btn">Rechercher</button>
+    {% if request.args.get('localisation') %}
+    <a href="{{ url_for('entreprises.index', secteur=secteur_filtre) }}" class="btn">✕</a>
+    {% endif %}
+</form>
+
 {% if entreprises.items %}
 <div class="table-wrapper"><table>
     <thead>
