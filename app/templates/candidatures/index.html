@@ -1,79 +1,181 @@
-{% extends "base/layout.html" %}
-{% block title %}Candidatures — Job Tracker{% endblock %}
-
-{% block content %}
+{% extends "base/layout.html" %} {% block title %}{% if archives %}Archives{%
+else %}Candidatures{% endif %} — Job Tracker{% endblock %} {% block content %}
 <div class="page-header">
-    <h1>Candidatures</h1>
-    <a href="{{ url_for('candidatures.nouvelle') }}" class="btn btn-primary">+ Nouvelle</a>
-    <a href="{{ url_for('candidatures.export') }}" class="btn">⬇ Export CSV</a>
+    <h1>{% if archives %}📦 Archives{% else %}Candidatures{% endif %}</h1>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+        {% if not archives %}
+        <a href="{{ url_for('candidatures.nouvelle') }}" class="btn btn-primary"
+            >+ Nouvelle</a
+        >
+        {% endif %}
+        <a
+            href="{{ url_for('candidatures.export', archives=1 if archives else 0) }}"
+            class="btn"
+            >⬇ Export CSV</a
+        >
+        {% if archives %}
+        <a href="{{ url_for('candidatures.index') }}" class="btn">← Actives</a>
+        {% else %}
+        <a href="{{ url_for('candidatures.index', archives=1) }}" class="btn"
+            >📦 Archives</a
+        >
+        {% endif %}
+    </div>
 </div>
 
-<!-- Filtres par statut -->
+{% if not archives %} {# Bouton "Archiver toute la campagne" — action
+irréversible avec confirmation #} {% if candidatures.total > 0 %}
+<div
+    style="
+        background: #fff3cd;
+        border: 1px solid #ffd966;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    "
+>
+    <span style="font-size: 0.9rem; color: #7c5e0a">
+        🗂 Clôturer la campagne et repartir sur une ardoise propre ?
+    </span>
+    <form
+        method="POST"
+        action="{{ url_for('candidatures.archiver_tout') }}"
+        onsubmit="return confirm('Archiver les {{ candidatures.total }} candidatures actives ? Elles resteront accessibles dans les Archives.')"
+    >
+        <button
+            type="submit"
+            class="btn btn-sm"
+            style="background: #f59f00; color: #fff; border-color: #f59f00"
+        >
+            Archiver toute la campagne ({{ candidatures.total }})
+        </button>
+    </form>
+</div>
+{% endif %} {# Filtres par statut — actives seulement #}
 <div class="filters">
-    <a href="{{ url_for('candidatures.index') }}"
-       class="filter-btn {{ 'active' if not statut_filtre }}">Toutes</a>
+    <a
+        href="{{ url_for('candidatures.index') }}"
+        class="filter-btn {{ 'active' if not statut_filtre }}"
+        >Toutes</a
+    >
     {% for s in statuts %}
-    <a href="{{ url_for('candidatures.index', statut=s) }}"
-       class="filter-btn {{ 'active' if statut_filtre == s }}">{{ s }}</a>
+    <a
+        href="{{ url_for('candidatures.index', statut=s) }}"
+        class="filter-btn {{ 'active' if statut_filtre == s }}"
+        >{{ s }}</a
+    >
     {% endfor %}
 </div>
-
-{% if candidatures.items %}
-<div class="table-wrapper"><table>
-    <thead>
-        <tr>
-            <th>Entreprise</th>
-            <th>Poste</th>
-            <th>Type</th>
-            <th>Envoyée le</th>
-            <th>Statut</th>
-            <th>Relance</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for c in candidatures.items %}
-        <tr>
-            <td><strong>{{ c.entreprise.nom }}</strong><br>
-                <small>{{ c.entreprise.localisation or '' }}</small>
-            </td>
-            <td>{{ c.poste }}</td>
-            <td><span class="badge">{{ c.type_contrat }}</span></td>
-            <td>{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
-            <td id="statut-{{ c.id }}">
-                {% with candidature = c %}{% include 'candidatures/_statut_badge.html' %}{% endwith %}
-            </td>
-            <td>
-                {% if c.relance_due %}
+{% endif %} {% if candidatures.items %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Entreprise</th>
+                <th>Poste</th>
+                <th>Type</th>
+                <th>Envoyée le</th>
+                <th>Statut</th>
+                {% if archives %}
+                <th>Archivée le</th>
+                {% else %}
+                <th>Relance</th>
+                {% endif %}
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in candidatures.items %}
+            <tr {% if archives %}style="opacity:.75;" {% endif %}>
+                <td>
+                    <strong>{{ c.entreprise.nom }}</strong><br />
+                    <small>{{ c.entreprise.localisation or '' }}</small>
+                </td>
+                <td>{{ c.poste }}</td>
+                <td><span class="badge">{{ c.type_contrat }}</span></td>
+                <td>{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    {% if archives %}
+                    <span class="badge badge-abandonné">{{ c.statut }}</span>
+                    {% else %}
+                    <div id="statut-{{ c.id }}">
+                        {% with candidature = c %}{% include
+                        'candidatures/_statut_badge.html' %}{% endwith %}
+                    </div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if archives %}
+                    <small>{{ c.archived_at.strftime('%d/%m/%Y') }}</small>
+                    {% else %} {% if c.relance_due %}
                     <span class="badge badge-warning">⚠️ Due</span>
-                {% elif c.date_relance %}
-                    {{ c.date_relance.strftime('%d/%m') }}
-                {% else %}—{% endif %}
-            </td>
-            <td>
-                <a href="{{ url_for('candidatures.detail', id=c.id) }}" class="btn btn-sm">Voir</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table></div>
+                    {% elif c.date_relance %} {{
+                    c.date_relance.strftime('%d/%m') }} {% else %}—{% endif %}
+                    {% endif %}
+                </td>
+                <td style="display: flex; gap: 0.4rem">
+                    <a
+                        href="{{ url_for('candidatures.detail', id=c.id) }}"
+                        class="btn btn-sm"
+                        >Voir</a
+                    >
+                    {% if archives %}
+                    <form
+                        method="POST"
+                        action="{{ url_for('candidatures.desarchiver', id=c.id) }}"
+                    >
+                        <button
+                            type="submit"
+                            class="btn btn-sm"
+                            title="Restaurer"
+                        >
+                            ↩
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 <div class="pagination">
     {% if candidatures.has_prev %}
-        <a href="{{ url_for('candidatures.index', page=candidatures.prev_num, statut=statut_filtre) }}" class="btn btn-sm">← Précédent</a>
+    <a
+        href="{{ url_for('candidatures.index', page=candidatures.prev_num, statut=statut_filtre, archives=1 if archives else 0) }}"
+        class="btn btn-sm"
+        >← Précédent</a
+    >
     {% endif %}
-    <span>Page {{ candidatures.page }} / {{ candidatures.pages }} — {{ candidatures.total }} candidatures</span>
+    <span
+        >Page {{ candidatures.page }} / {{ candidatures.pages }} — {{
+        candidatures.total }} candidature(s)</span
+    >
     {% if candidatures.has_next %}
-        <a href="{{ url_for('candidatures.index', page=candidatures.next_num, statut=statut_filtre) }}" class="btn btn-sm">Suivant →</a>
+    <a
+        href="{{ url_for('candidatures.index', page=candidatures.next_num, statut=statut_filtre, archives=1 if archives else 0) }}"
+        class="btn btn-sm"
+        >Suivant →</a
+    >
     {% endif %}
 </div>
 
 {% else %}
 <div class="empty-state">
-    <p>Aucune candidature
-       {{ 'avec le statut "' + statut_filtre + '"' if statut_filtre else '' }}.
-       <a href="{{ url_for('candidatures.nouvelle') }}">En ajouter une</a>.
+    {% if archives %}
+    <p>Aucune candidature archivée.</p>
+    {% else %}
+    <p>
+        Aucune candidature {{ 'avec le statut "' + statut_filtre + '"' if
+        statut_filtre else '' }}.
+        <a href="{{ url_for('candidatures.nouvelle') }}">En ajouter une</a>.
     </p>
+    {% endif %}
 </div>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}
