@@ -7,6 +7,9 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - APP_PASSWORD=${APP_PASSWORD}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@job-tracker-db:5432/${POSTGRES_DB}
+      - LBA_API_KEY=${LBA_API_KEY}
+      - N8N_WEBHOOK_ENRICH=${N8N_WEBHOOK_ENRICH}
+      - N8N_WEBHOOK_LM=${N8N_WEBHOOK_LM}
     depends_on:
       job-tracker-db:
         condition: service_healthy
