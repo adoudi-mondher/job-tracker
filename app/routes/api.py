@@ -92,6 +92,14 @@ def get_relances():
     return jsonify(dues)
 
 
+@api_bp.route("/candidatures/<int:id>", methods=["GET"])
+@api_key_required
+def get_candidature(id):
+    """Retourne une candidature par son id — utilise par n8n W3."""
+    candidature = Candidature.query.get_or_404(id)
+    return jsonify(candidature.to_dict())
+
+
 @api_bp.route("/candidatures/<int:id>", methods=["PATCH"])
 @api_key_required
 def patch_candidature(id):

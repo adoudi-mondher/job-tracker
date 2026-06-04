@@ -79,15 +79,20 @@ def nouvelle():
         db.session.add(candidature)
         db.session.commit()
 
-        # ── W2 : enrichissement automatique si URL fournie ────────────────────
+        # ── W2 : enrichissement auto si URL → W2 chainera W3 en fin de workflow
+        # ── W3 : génération LM directe si pas d'URL
         if candidature.lien_offre:
             send_webhook(
                 current_app.config["N8N_WEBHOOK_ENRICH"],
                 {"candidature_id": candidature.id, "url": candidature.lien_offre},
             )
-            flash("Candidature ajoutée. Enrichissement automatique en cours — la fiche sera mise à jour dans quelques secondes.", "info")
+            flash("Candidature ajoutée. Enrichissement + lettre de motivation en cours de génération…", "info")
         else:
-            flash("Candidature ajoutée.", "success")
+            send_webhook(
+                current_app.config["N8N_WEBHOOK_LM"],
+                {"candidature_id": candidature.id},
+            )
+            flash("Candidature ajoutée. Lettre de motivation en cours de génération…", "info")
 
         # Redirection vers le detail pour voir l'enrichissement
         return redirect(url_for("candidatures.detail", id=candidature.id))
