@@ -1,7 +1,7 @@
 .env
 *.db
 *.sqlite3
-*.sql
+seed.sql
 __pycache__/
 *.pyc
 *.pyo
@@ -12,3 +12,5 @@ instance/
 *.egg-info/
 dist/
 build/
+flask_stdout.log
+flask_stderr.log
