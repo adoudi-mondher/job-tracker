@@ -96,7 +96,14 @@ irréversible avec confirmation #} {% if candidatures.total > 0 %}
                     <strong>{{ c.entreprise.nom }}</strong><br />
                     <small>{{ c.entreprise.localisation or '' }}</small>
                 </td>
-                <td>{{ c.poste }}</td>
+                <td>
+                    {{ c.poste }}
+                    {% if c.source == 'auto' %}
+                    <span class="badge" style="font-size:0.7rem;background:#d1fae5;color:#065f46;" title="Importée automatiquement">🤖</span>
+                    {% elif c.source == 'lba' %}
+                    <span class="badge" style="font-size:0.7rem;background:#e0f2fe;color:#0369a1;" title="La Bonne Alternance">LBA</span>
+                    {% endif %}
+                </td>
                 <td><span class="badge">{{ c.type_contrat }}</span></td>
                 <td>{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
                 <td>

@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 
 from app import db
 from app.models import Candidature, Entreprise
 from app.routes.main import login_required
+from app.webhooks import send_webhook
 
 candidatures_bp = Blueprint("candidatures", __name__)
 
@@ -77,8 +78,19 @@ def nouvelle():
         )
         db.session.add(candidature)
         db.session.commit()
-        flash("Candidature ajoutée.", "success")
-        return redirect(url_for("candidatures.index"))
+
+        # ── W2 : enrichissement automatique si URL fournie ────────────────────
+        if candidature.lien_offre:
+            send_webhook(
+                current_app.config["N8N_WEBHOOK_ENRICH"],
+                {"candidature_id": candidature.id, "url": candidature.lien_offre},
+            )
+            flash("Candidature ajoutée. Enrichissement automatique en cours — la fiche sera mise à jour dans quelques secondes.", "info")
+        else:
+            flash("Candidature ajoutée.", "success")
+
+        # Redirection vers le detail pour voir l'enrichissement
+        return redirect(url_for("candidatures.detail", id=candidature.id))
     return render_template(
         "candidatures/form.html",
         candidature=None,
@@ -108,6 +120,9 @@ def modifier(id):
         candidature.lien_offre = request.form.get("lien_offre")
         candidature.lm_fichier = request.form.get("lm_fichier")
         candidature.notes = request.form.get("notes")
+        # lettre_motivation : present dans le form rapide du detail OU dans le form complet
+        if "lettre_motivation" in request.form:
+            candidature.lettre_motivation = request.form.get("lettre_motivation") or None
         db.session.commit()
         flash("Candidature mise à jour.", "success")
         return redirect(url_for("candidatures.detail", id=candidature.id))
@@ -128,10 +143,20 @@ def modifier(id):
 @login_required
 def changer_statut(id):
     candidature = Candidature.query.get_or_404(id)
+    ancien_statut = candidature.statut
     nouveau_statut = request.form.get("statut")
     if nouveau_statut in Candidature.STATUTS:
         candidature.statut = nouveau_statut
         db.session.commit()
+
+        # ── W3 : generation LM quand on passe explicitement a "A envoyer" ─────
+        # On exclut la creation (ancien_statut == "A envoyer" -> pas de changement reel)
+        if nouveau_statut == "À envoyer" and ancien_statut != "À envoyer":
+            send_webhook(
+                current_app.config["N8N_WEBHOOK_LM"],
+                {"candidature_id": candidature.id},
+            )
+
     return render_template(
         "candidatures/_statut_badge.html",
         candidature=candidature,

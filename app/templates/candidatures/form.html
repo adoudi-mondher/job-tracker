@@ -70,6 +70,11 @@
         <input type="url" name="lien_offre"
                value="{{ candidature.lien_offre if candidature else '' }}"
                placeholder="https://...">
+        {% if not candidature %}
+        <small style="color: #6b7280;">
+            💡 Si tu colles une URL, la fiche sera enrichie automatiquement (titre, stack, résumé) via n8n dans quelques secondes.
+        </small>
+        {% endif %}
     </div>
 
     <div class="form-group">

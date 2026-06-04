@@ -62,6 +62,16 @@ class Candidature(db.Model):
     archived_at = db.Column(db.DateTime, nullable=True, default=None)
     # ─────────────────────────────────────────────────────────────────────────
 
+    # ── Champs n8n / enrichissement automatique ──────────────────────────────
+    # source : "manual" (saisie UI), "auto" (scraping n8n), "lba" (La Bonne Alternance)
+    source = db.Column(db.String(50), default="manual", nullable=False)
+    # Enrichissement W2 (extraction depuis URL de l'offre via Claude)
+    stack_technique = db.Column(db.Text, nullable=True)
+    resume_offre = db.Column(db.Text, nullable=True)
+    # Lettre de motivation W3 (brouillon généré par Claude)
+    lettre_motivation = db.Column(db.Text, nullable=True)
+    # ─────────────────────────────────────────────────────────────────────────
+
     interactions = db.relationship(
         "Interaction", backref="candidature", lazy=True, cascade="all, delete-orphan"
     )
@@ -111,6 +121,10 @@ class Candidature(db.Model):
             "archived_at": self.archived_at.isoformat() if self.archived_at else None,
             "jours_depuis_envoi": self.jours_depuis_envoi,
             "relance_due": self.relance_due,
+            "source": self.source,
+            "stack_technique": self.stack_technique,
+            "resume_offre": self.resume_offre,
+            "lettre_motivation": self.lettre_motivation,
         }
 
 

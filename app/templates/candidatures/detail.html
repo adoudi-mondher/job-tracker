@@ -2,12 +2,14 @@
 Tracker{% endblock %} {% block content %}
 <div class="page-header">
     <h1>
-        {{ candidature.poste }} {% if candidature.is_archived %}
-        <span
-            class="badge badge-abandonné"
-            style="font-size: 0.65rem; vertical-align: middle"
-            >📦 Archivée</span
-        >
+        {{ candidature.poste }}
+        {% if candidature.is_archived %}
+        <span class="badge badge-abandonné" style="font-size:0.65rem;vertical-align:middle;">📦 Archivée</span>
+        {% endif %}
+        {% if candidature.source == 'auto' %}
+        <span class="badge" style="font-size:0.65rem;vertical-align:middle;background:#d1fae5;color:#065f46;" title="Importée automatiquement par n8n">🤖 Auto</span>
+        {% elif candidature.source == 'lba' %}
+        <span class="badge" style="font-size:0.65rem;vertical-align:middle;background:#e0f2fe;color:#0369a1;" title="Importée depuis La Bonne Alternance">LBA</span>
         {% endif %}
     </h1>
     <div>
@@ -30,6 +32,13 @@ Tracker{% endblock %} {% block content %}
 <div class="alert alert-warning">
     📦 Candidature archivée le {{ candidature.archived_at.strftime('%d/%m/%Y')
     }}. Elle n'apparaît plus dans la vue active ni dans les stats du dashboard.
+</div>
+{% endif %}
+
+{# Hint enrichissement : URL renseignée mais résumé pas encore disponible #}
+{% if candidature.lien_offre and not candidature.resume_offre and not candidature.is_archived %}
+<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.25rem;font-size:0.9rem;color:#1d4ed8;">
+    ⏳ Enrichissement automatique en cours — la stack technique et le résumé seront disponibles dans quelques secondes. Actualisez la page.
 </div>
 {% endif %}
 
@@ -122,6 +131,59 @@ Tracker{% endblock %} {% block content %}
         </dl>
     </div>
 </div>
+
+<!-- Enrichissement automatique (W2) -->
+{% if candidature.stack_technique or candidature.resume_offre %}
+<section class="section">
+    <h2>✨ Enrichissement automatique</h2>
+    <div class="detail-grid">
+        {% if candidature.resume_offre %}
+        <div class="card">
+            <h3 style="font-size:0.95rem;margin-bottom:0.5rem;">Résumé de l'offre</h3>
+            <p style="font-size:0.9rem;color:#374151;white-space:pre-line;">{{ candidature.resume_offre }}</p>
+        </div>
+        {% endif %}
+        {% if candidature.stack_technique %}
+        <div class="card">
+            <h3 style="font-size:0.95rem;margin-bottom:0.5rem;">Stack technique</h3>
+            <p style="font-size:0.9rem;color:#374151;">{{ candidature.stack_technique }}</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Lettre de motivation (W3) -->
+{% if candidature.lettre_motivation or not candidature.is_archived %}
+<section class="section">
+    <h2>📝 Lettre de motivation</h2>
+    {% if candidature.lettre_motivation %}
+    <div class="card" style="margin-bottom:1rem;">
+        <form method="POST" action="{{ url_for('candidatures.modifier', id=candidature.id) }}">
+            {# On réinjecte tous les champs cachés pour ne modifier que la LM #}
+            <input type="hidden" name="entreprise_id" value="{{ candidature.entreprise_id }}">
+            <input type="hidden" name="poste" value="{{ candidature.poste }}">
+            <input type="hidden" name="type_contrat" value="{{ candidature.type_contrat }}">
+            <input type="hidden" name="date_envoi" value="{{ candidature.date_envoi.isoformat() }}">
+            <input type="hidden" name="statut" value="{{ candidature.statut }}">
+            <input type="hidden" name="lien_offre" value="{{ candidature.lien_offre or '' }}">
+            <input type="hidden" name="lm_fichier" value="{{ candidature.lm_fichier or '' }}">
+            <input type="hidden" name="notes" value="{{ candidature.notes or '' }}">
+            <textarea name="lettre_motivation" rows="16"
+                style="width:100%;font-family:Georgia,serif;font-size:0.9rem;line-height:1.6;border:1px solid #e5e7eb;border-radius:6px;padding:0.75rem;resize:vertical;">{{ candidature.lettre_motivation }}</textarea>
+            <div style="margin-top:0.75rem;">
+                <button type="submit" class="btn btn-primary btn-sm">💾 Sauvegarder</button>
+                <small style="color:#6b7280;margin-left:0.75rem;">Brouillon généré par Claude · modifiable librement</small>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <p class="empty-state" style="font-size:0.9rem;color:#6b7280;">
+        Aucun brouillon disponible. Passe le statut à <strong>À envoyer</strong> pour déclencher la génération automatique via n8n, ou rédige-le manuellement via Modifier.
+    </p>
+    {% endif %}
+</section>
+{% endif %}
 
 <!-- Historique interactions -->
 <section class="section">
