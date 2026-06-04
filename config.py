@@ -11,8 +11,9 @@ class Config:
     LBA_API_KEY = os.environ.get('LBA_API_KEY', '')
 
     # ── n8n webhooks sortants ─────────────────────────────────────────────────
-    # URL du webhook n8n déclenchant l'enrichissement automatique (W2)
     N8N_WEBHOOK_ENRICH = os.environ.get('N8N_WEBHOOK_ENRICH', '')
-    # URL du webhook n8n déclenchant la génération de lettre de motivation (W3)
     N8N_WEBHOOK_LM = os.environ.get('N8N_WEBHOOK_LM', '')
-    # ─────────────────────────────────────────────────────────────────────────
+
+    # ── France Travail API (W1 — scraping alternance) ─────────────────────────
+    FT_CLIENT_ID = os.environ.get('FT_CLIENT_ID', '')
+    FT_CLIENT_SECRET = os.environ.get('FT_CLIENT_SECRET', '')

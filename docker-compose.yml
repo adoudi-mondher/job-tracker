@@ -10,6 +10,8 @@ services:
       - LBA_API_KEY=${LBA_API_KEY}
       - N8N_WEBHOOK_ENRICH=${N8N_WEBHOOK_ENRICH}
       - N8N_WEBHOOK_LM=${N8N_WEBHOOK_LM}
+      - FT_CLIENT_ID=${FT_CLIENT_ID}
+      - FT_CLIENT_SECRET=${FT_CLIENT_SECRET}
     depends_on:
       job-tracker-db:
         condition: service_healthy

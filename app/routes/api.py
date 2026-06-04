@@ -197,176 +197,127 @@ def add_interaction(id):
 
 # ── W1 : scraping quotidien offres IA alternance ──────────────────────────────
 
+# Départements cibles (Paris + IDF, Lyon, Marseille, Metz, Nancy, Strasbourg)
+_FT_TARGET_DEPTS = {"75", "77", "78", "91", "92", "93", "94", "95",  # Île-de-France
+                    "69", "13", "57", "54", "67"}
+
+# Recherches France Travail : (motsCles, natureContrat)
+# E2 = apprentissage, FS = contrat de professionnalisation
+_FT_SEARCHES = [
+    ("intelligence artificielle", "E2"),
+    ("intelligence artificielle", "FS"),
+    ("machine learning",          "E2"),
+    ("machine learning",          "FS"),
+    ("data scientist",            "E2"),
+    ("nlp llm rag",               "E2"),
+]
+
 
 @api_bp.route("/scrape", methods=["POST"])
 @api_key_required
 def scrape_offres():
     """
     W1 — Déclenché par n8n (Schedule 7h).
-    Scrape LBA API (6 villes) + WTTJ RSS + HelloWork RSS.
-    Crée les nouvelles candidatures et retourne un rapport JSON.
+    Source : France Travail API (OAuth2) — offres alternance IA
+    Filtre par départements cibles et déduplique par URL.
     """
-    CITIES = [
-        {"name": "Paris",       "lat": 48.8566, "lon": 2.3522},
-        {"name": "Lyon",        "lat": 45.7640, "lon": 4.8357},
-        {"name": "Marseille",   "lat": 43.2965, "lon": 5.3698},
-        {"name": "Metz",        "lat": 49.1193, "lon": 6.1757},
-        {"name": "Nancy",       "lat": 48.6921, "lon": 6.1844},
-        {"name": "Strasbourg",  "lat": 48.5734, "lon": 7.7521},
-    ]
+    ft_client_id = current_app.config.get("FT_CLIENT_ID", "")
+    ft_client_secret = current_app.config.get("FT_CLIENT_SECRET", "")
 
-    RSS_FEEDS = [
-        {
-            "url": (
-                "https://www.welcometothejungle.com/fr/jobs.rss"
-                "?query=d%C3%A9veloppeur+ia+alternance"
-                "&refinementList%5Bcontract_type_names%5D%5B%5D=Alternance"
-            ),
-            "src": "WTTJ",
-        },
-        {
-            "url": (
-                "https://www.welcometothejungle.com/fr/jobs.rss"
-                "?query=llm+rag+nlp+alternance"
-                "&refinementList%5Bcontract_type_names%5D%5B%5D=Alternance"
-            ),
-            "src": "WTTJ",
-        },
-        {
-            "url": (
-                "https://www.hellowork.com/rss/emploi"
-                "?k=d%C3%A9veloppeur+intelligence+artificielle&c=Alternance"
-            ),
-            "src": "HelloWork",
-        },
-        {
-            "url": (
-                "https://www.hellowork.com/rss/emploi"
-                "?k=ia+machine+learning+alternance&c=Alternance"
-            ),
-            "src": "HelloWork",
-        },
-    ]
+    report = {"created": 0, "ft": 0, "skipped_geo": 0, "errors": []}
 
-    lba_key = current_app.config.get("LBA_API_KEY", "")
+    # ── 1. Token OAuth2 France Travail ────────────────────────────────────────
+    try:
+        tok_resp = http_requests.post(
+            "https://entreprise.francetravail.fr/connexion/oauth2/access_token",
+            params={"realm": "/partenaire"},
+            data={
+                "grant_type": "client_credentials",
+                "client_id": ft_client_id,
+                "client_secret": ft_client_secret,
+                "scope": "api_offresdemploiv2 o2dsoffre",
+            },
+            timeout=10,
+        )
+        tok_resp.raise_for_status()
+        token = tok_resp.json()["access_token"]
+    except Exception as e:
+        report["errors"].append(f"FT-token: {e}")
+        return jsonify(report)
 
-    # Charger les URLs existantes pour déduplication
-    existing_urls = {
+    ft_headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+
+    # ── 2. URLs déjà en base ──────────────────────────────────────────────────
+    seen = {
         c.lien_offre
         for c in Candidature.query.filter(Candidature.lien_offre.isnot(None)).all()
     }
-    seen = set(existing_urls)
 
-    report = {"created": 0, "lba": 0, "wttj": 0, "hellowork": 0, "errors": []}
+    def _dept(offre):
+        """Extrait le code département (2 chiffres) depuis lieuTravail.libelle."""
+        libelle = (offre.get("lieuTravail") or {}).get("libelle", "")
+        # Format : "75 - PARIS 17" ou "France"
+        m = re.match(r"^(\d{2,3})\s*-", libelle)
+        return m.group(1) if m else None
 
-    def _parse_rss(text):
-        """Extrait les items d'un flux RSS — gère CDATA et guid/link."""
-        items = []
-        for m in re.finditer(r"<item>(.*?)</item>", text, re.DOTALL):
-            b = m.group(1)
-            title_m = re.search(
-                r"<title>(?:<!\[CDATA\[)?\s*(.*?)\s*(?:\]\]>)?</title>", b, re.DOTALL
-            )
-            link_m = re.search(r"<link>\s*(https?://[^\s<]+)\s*</link>", b) or re.search(
-                r"<guid[^>]*>\s*(https?://[^\s<]+)\s*</guid>", b
-            )
-            if title_m and link_m:
-                items.append({"title": title_m.group(1).strip(), "link": link_m.group(1).strip()})
-        return items
+    def _create_from_ft(offre):
+        dept = _dept(offre)
+        # Accepter aussi "France" (remote) ou depts cibles
+        if dept and dept not in _FT_TARGET_DEPTS:
+            report["skipped_geo"] += 1
+            return
 
-    def _split_title(raw):
-        """'Dev IA chez Acme Corp' -> ('Dev IA', 'Acme Corp')"""
-        m = re.match(r"^(.*?)\s+(?:chez|@)\s+(.+)$", raw, re.IGNORECASE) or re.match(
-            r"^(.*?)\s+-\s+(.+)$", raw
+        url = (
+            (offre.get("origineOffre") or {}).get("urlOrigine")
+            or f"https://candidat.francetravail.fr/offres/recherche/detail/{offre['id']}"
         )
-        return (m.group(1).strip(), m.group(2).strip()) if m else (raw.strip(), "")
-
-    def _create(offer, src_key):
-        url = offer.get("lien_offre")
-        if not url or url in seen:
+        if url in seen:
             return
         seen.add(url)
-        # Trouver ou créer l'entreprise
-        nom = offer.get("entreprise_nom", "").strip() or "Inconnu"
-        entreprise = Entreprise.query.filter_by(nom=nom).first()
+
+        lieu = (offre.get("lieuTravail") or {}).get("libelle", "")
+        nom_ent = (offre.get("entreprise") or {}).get("nom") or "France Travail"
+        nom_ent = nom_ent.strip() or "France Travail"
+
+        entreprise = Entreprise.query.filter_by(nom=nom_ent).first()
         if not entreprise:
-            entreprise = Entreprise(nom=nom)
+            entreprise = Entreprise(nom=nom_ent)
             db.session.add(entreprise)
             db.session.flush()
+
         today = datetime.utcnow().date()
-        c = Candidature(
+        db.session.add(Candidature(
             entreprise_id=entreprise.id,
-            poste=offer.get("poste", "Alternance IA"),
+            poste=offre.get("intitule", "Alternance IA"),
             type_contrat="Alternance",
             date_envoi=today,
             date_relance=today + timedelta(days=7),
             statut="À envoyer",
             lien_offre=url,
             source="auto",
-            notes=offer.get("notes", ""),
-        )
-        db.session.add(c)
+            notes=f"France Travail · {lieu}",
+        ))
         db.session.commit()
         report["created"] += 1
-        report[src_key] += 1
+        report["ft"] += 1
 
-    # ── LBA API — 6 villes ────────────────────────────────────────────────────
-    for city in CITIES:
+    # ── 3. Recherches France Travail ──────────────────────────────────────────
+    for mots_cles, nature_contrat in _FT_SEARCHES:
         try:
             resp = http_requests.get(
-                "https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs",
+                "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search",
+                headers=ft_headers,
                 params={
-                    "romes": "M1805,M1803",
-                    "longitude": city["lon"],
-                    "latitude": city["lat"],
-                    "radius": 30,
-                    "caller": "job-tracker-mondher",
+                    "motsCles": mots_cles,
+                    "natureContrat": nature_contrat,
+                    "nombreResultats": 150,
                 },
-                headers={"Authorization": f"Bearer {lba_key}"},
-                timeout=10,
+                timeout=15,
             )
             resp.raise_for_status()
-            data = resp.json()
-            jobs = (data.get("lbaJobs") or {}).get("results", []) + \
-                   (data.get("peJobs") or {}).get("results", [])
-            for j in jobs:
-                job_url = j.get("url") or j.get("apply_url")
-                _create(
-                    {
-                        "entreprise_nom": (j.get("company") or {}).get("name")
-                            or j.get("company_name") or city["name"],
-                        "poste": j.get("title") or j.get("intitule") or "Alternance IA",
-                        "lien_offre": job_url,
-                        "notes": f"LBA · {city['name']}",
-                    },
-                    "lba",
-                )
+            for offre in resp.json().get("resultats", []):
+                _create_from_ft(offre)
         except Exception as e:
-            report["errors"].append(f"LBA-{city['name']}: {e}")
-
-    # ── RSS — WTTJ + HelloWork ────────────────────────────────────────────────
-    for feed in RSS_FEEDS:
-        src = feed["src"]
-        src_key = "wttj" if src == "WTTJ" else "hellowork"
-        try:
-            resp = http_requests.get(
-                feed["url"],
-                headers={"User-Agent": "Mozilla/5.0 (compatible; job-tracker-bot/1.0)"},
-                timeout=10,
-            )
-            resp.raise_for_status()
-            for item in _parse_rss(resp.text):
-                poste, entreprise = _split_title(item["title"])
-                _create(
-                    {
-                        "entreprise_nom": entreprise or src,
-                        "poste": poste or item["title"],
-                        "lien_offre": item["link"],
-                        "notes": f"Source : {src}",
-                    },
-                    src_key,
-                )
-        except Exception as e:
-            report["errors"].append(f"{src}: {e}")
+            report["errors"].append(f"FT-{mots_cles}-{nature_contrat}: {e}")
 
     return jsonify(report)
