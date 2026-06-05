@@ -17,6 +17,14 @@
             <input type="text" name="romes" value="{{ romes }}" placeholder="M1806,M1803,M1805">
         </div>
         <div class="form-group">
+            <label>Type de contrat</label>
+            <select name="contrat">
+                <option value="tous"               {% if contrat == 'tous'               %}selected{% endif %}>Tous</option>
+                <option value="apprentissage"      {% if contrat == 'apprentissage'      %}selected{% endif %}>Apprentissage</option>
+                <option value="professionnalisation" {% if contrat == 'professionnalisation' %}selected{% endif %}>Professionnalisation</option>
+            </select>
+        </div>
+        <div class="form-group">
             <label>Rayon (km)</label>
             <input type="number" name="radius" value="{{ radius }}" min="5" max="100">
         </div>

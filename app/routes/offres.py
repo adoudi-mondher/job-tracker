@@ -103,8 +103,18 @@ def index():
     romes   = request.args.get("romes",   DEFAULT_ROMES)
     radius  = request.args.get("radius",  DEFAULT_RADIUS)
     diploma = request.args.get("diploma", DEFAULT_DIPLOMA)
+    contrat = request.args.get("contrat", "tous")  # "tous" | "apprentissage" | "professionnalisation"
 
     jobs, recruiters = fetch_offres_all_cities(romes, radius, diploma)
+
+    # Filtre par type de contrat (client-side — le champ est dans la réponse API)
+    if contrat != "tous":
+        kw = contrat.lower()
+        jobs = [
+            j for j in jobs
+            if any(kw in (t or "").lower()
+                   for t in ((j.get("contract") or {}).get("type") or []))
+        ]
 
     # URLs déjà dans le pipeline → marquage "Déjà ajouté"
     existing_urls = {
@@ -119,6 +129,7 @@ def index():
         romes=romes,
         radius=radius,
         diploma=diploma,
+        contrat=contrat,
         existing_urls=existing_urls,
     )
 
