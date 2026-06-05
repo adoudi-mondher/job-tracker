@@ -195,14 +195,10 @@ def add_interaction(id):
     return jsonify(interaction.to_dict()), 201
 
 
-# ── W1 : scraping quotidien offres IA alternance ──────────────────────────────
+# ── W1 : sonde quotidienne offres IA alternance (sans création automatique) ───
 
-# Départements cibles (Paris + IDF, Lyon, Marseille, Metz, Nancy, Strasbourg)
-_FT_TARGET_DEPTS = {"75", "77", "78", "91", "92", "93", "94", "95",  # Île-de-France
-                    "69", "13", "57", "54", "67"}
-
-# Recherches France Travail : (motsCles, natureContrat)
-# E2 = apprentissage, FS = contrat de professionnalisation
+_FT_TARGET_DEPTS_API = {"75", "77", "78", "91", "92", "93", "94", "95",
+                        "69", "13", "57", "54", "67"}
 _FT_SEARCHES = [
     ("intelligence artificielle", "E2"),
     ("intelligence artificielle", "FS"),
@@ -218,17 +214,17 @@ _FT_SEARCHES = [
 def scrape_offres():
     """
     W1 — Déclenché par n8n (Schedule 7h).
-    Source : France Travail API (OAuth2) — offres alternance IA
-    Filtre par départements cibles et déduplique par URL.
+    Sonde de comptage : retourne le nombre de nouvelles offres disponibles
+    sur France Travail sans créer de candidatures.
+    L'ajout au pipeline se fait manuellement via /offres/france-travail.
     """
-    ft_client_id = current_app.config.get("FT_CLIENT_ID", "")
+    ft_client_id     = current_app.config.get("FT_CLIENT_ID", "")
     ft_client_secret = current_app.config.get("FT_CLIENT_SECRET", "")
+    report = {"available": 0, "already_in_pipeline": 0, "errors": []}
 
-    report = {"created": 0, "ft": 0, "skipped_geo": 0, "errors": []}
-
-    # ── 1. Token OAuth2 France Travail ────────────────────────────────────────
+    # Token OAuth2
     try:
-        tok_resp = http_requests.post(
+        tok = http_requests.post(
             "https://entreprise.francetravail.fr/connexion/oauth2/access_token",
             params={"realm": "/partenaire"},
             data={
@@ -239,85 +235,49 @@ def scrape_offres():
             },
             timeout=10,
         )
-        tok_resp.raise_for_status()
-        token = tok_resp.json()["access_token"]
+        tok.raise_for_status()
+        token = tok.json()["access_token"]
     except Exception as e:
         report["errors"].append(f"FT-token: {e}")
         return jsonify(report)
 
     ft_headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
 
-    # ── 2. URLs déjà en base ──────────────────────────────────────────────────
-    seen = {
+    # URLs existantes en base
+    existing_urls = {
         c.lien_offre
         for c in Candidature.query.filter(Candidature.lien_offre.isnot(None)).all()
     }
+    seen_ids: set = set()
 
-    def _dept(offre):
-        """Extrait le code département (2 chiffres) depuis lieuTravail.libelle."""
-        libelle = (offre.get("lieuTravail") or {}).get("libelle", "")
-        # Format : "75 - PARIS 17" ou "France"
-        m = re.match(r"^(\d{2,3})\s*-", libelle)
-        return m.group(1) if m else None
-
-    def _create_from_ft(offre):
-        dept = _dept(offre)
-        # Accepter aussi "France" (remote) ou depts cibles
-        if dept and dept not in _FT_TARGET_DEPTS:
-            report["skipped_geo"] += 1
-            return
-
-        url = (
-            (offre.get("origineOffre") or {}).get("urlOrigine")
-            or f"https://candidat.francetravail.fr/offres/recherche/detail/{offre['id']}"
-        )
-        if url in seen:
-            return
-        seen.add(url)
-
-        lieu = (offre.get("lieuTravail") or {}).get("libelle", "")
-        nom_ent = (offre.get("entreprise") or {}).get("nom") or "France Travail"
-        nom_ent = nom_ent.strip() or "France Travail"
-
-        entreprise = Entreprise.query.filter_by(nom=nom_ent).first()
-        if not entreprise:
-            entreprise = Entreprise(nom=nom_ent)
-            db.session.add(entreprise)
-            db.session.flush()
-
-        today = datetime.utcnow().date()
-        db.session.add(Candidature(
-            entreprise_id=entreprise.id,
-            poste=offre.get("intitule", "Alternance IA"),
-            type_contrat="Alternance",
-            date_envoi=today,
-            date_relance=today + timedelta(days=7),
-            statut="À envoyer",
-            lien_offre=url,
-            source="auto",
-            notes=f"France Travail · {lieu}",
-        ))
-        db.session.commit()
-        report["created"] += 1
-        report["ft"] += 1
-
-    # ── 3. Recherches France Travail ──────────────────────────────────────────
     for mots_cles, nature_contrat in _FT_SEARCHES:
         try:
             resp = http_requests.get(
                 "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search",
                 headers=ft_headers,
-                params={
-                    "motsCles": mots_cles,
-                    "natureContrat": nature_contrat,
-                    "nombreResultats": 150,
-                },
+                params={"motsCles": mots_cles, "natureContrat": nature_contrat,
+                        "nombreResultats": 150},
                 timeout=15,
             )
             resp.raise_for_status()
-            for offre in resp.json().get("resultats", []):
-                _create_from_ft(offre)
+            for o in resp.json().get("resultats", []):
+                if o["id"] in seen_ids:
+                    continue
+                libelle = (o.get("lieuTravail") or {}).get("libelle", "")
+                m = re.match(r"^(\d{2,3})\s*-", libelle)
+                dept = m.group(1) if m else None
+                if dept and dept not in _FT_TARGET_DEPTS_API:
+                    continue
+                seen_ids.add(o["id"])
+                url = (
+                    (o.get("origineOffre") or {}).get("urlOrigine")
+                    or f"https://candidat.francetravail.fr/offres/recherche/detail/{o['id']}"
+                )
+                if url in existing_urls:
+                    report["already_in_pipeline"] += 1
+                else:
+                    report["available"] += 1
         except Exception as e:
-            report["errors"].append(f"FT-{mots_cles}-{nature_contrat}: {e}")
+            report["errors"].append(f"FT-{nature_contrat}: {e}")
 
     return jsonify(report)
