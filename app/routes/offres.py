@@ -1,5 +1,6 @@
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
@@ -16,21 +17,34 @@ offres_bp = Blueprint("offres", __name__)
 # ── LBA ───────────────────────────────────────────────────────────────────────
 
 LBA_API_URL = "https://api.apprentissage.beta.gouv.fr/api/job/v1/search"
-DEFAULT_PARAMS = {
-    "latitude": 49.1193,
-    "longitude": 6.1757,
-    "radius": 30,
-    "target_diploma_level": "3",
-    "romes": "M1806,M1803,M1805",
-}
+
+# Villes cibles — identiques à France Travail
+_LBA_CITIES = [
+    {"name": "Paris",      "lat": 48.8566, "lon": 2.3522},
+    {"name": "Lyon",       "lat": 45.7640, "lon": 4.8357},
+    {"name": "Marseille",  "lat": 43.2965, "lon": 5.3698},
+    {"name": "Metz",       "lat": 49.1193, "lon": 6.1757},
+    {"name": "Nancy",      "lat": 48.6921, "lon": 6.1844},
+    {"name": "Strasbourg", "lat": 48.5734, "lon": 7.7521},
+]
+
+DEFAULT_ROMES   = "M1806,M1803,M1805"
+DEFAULT_RADIUS  = 30
+DEFAULT_DIPLOMA = "3"
 
 
-def fetch_offres(params):
-    """Appel API LBA — retourne (jobs, recruiters) ou ([], []) en cas d'erreur."""
+def _fetch_one_city(lat, lon, radius, romes, diploma):
+    """Appel API LBA pour une ville — retourne (jobs, recruiters)."""
     try:
         resp = requests.get(
             LBA_API_URL,
-            params=params,
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "radius": radius,
+                "target_diploma_level": diploma,
+                "romes": romes,
+            },
             headers={
                 "accept": "application/json",
                 "Authorization": f"Bearer {Config.LBA_API_KEY}",
@@ -44,23 +58,68 @@ def fetch_offres(params):
         return [], []
 
 
+def fetch_offres_all_cities(romes, radius, diploma):
+    """
+    Interroge l'API LBA pour les 6 villes cibles en parallèle.
+    Déduplique les offres par URL et les recruteurs par nom+adresse.
+    """
+    def _fetch(city):
+        return _fetch_one_city(city["lat"], city["lon"], radius, romes, diploma)
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        results = list(pool.map(_fetch, _LBA_CITIES))
+
+    all_jobs: list = []
+    all_recruiters: list = []
+    seen_job_urls: set = set()
+    seen_recruiter_keys: set = set()
+
+    for jobs, recruiters in results:
+        for job in jobs:
+            url = (job.get("apply") or {}).get("url") or ""
+            if url and url in seen_job_urls:
+                continue
+            if url:
+                seen_job_urls.add(url)
+            all_jobs.append(job)
+
+        for r in recruiters:
+            wp = r.get("workplace") or {}
+            key = (
+                f"{(wp.get('name') or '').strip()}"
+                f"|{((wp.get('location') or {}).get('address') or '').strip()}"
+            )
+            if key in seen_recruiter_keys:
+                continue
+            seen_recruiter_keys.add(key)
+            all_recruiters.append(r)
+
+    return all_jobs, all_recruiters
+
+
 @offres_bp.route("/")
 @login_required
 def index():
-    params = {
-        "latitude":             request.args.get("latitude",  DEFAULT_PARAMS["latitude"]),
-        "longitude":            request.args.get("longitude", DEFAULT_PARAMS["longitude"]),
-        "radius":               request.args.get("radius",    DEFAULT_PARAMS["radius"]),
-        "target_diploma_level": request.args.get("diploma",   DEFAULT_PARAMS["target_diploma_level"]),
-        "romes":                request.args.get("romes",     DEFAULT_PARAMS["romes"]),
+    romes   = request.args.get("romes",   DEFAULT_ROMES)
+    radius  = request.args.get("radius",  DEFAULT_RADIUS)
+    diploma = request.args.get("diploma", DEFAULT_DIPLOMA)
+
+    jobs, recruiters = fetch_offres_all_cities(romes, radius, diploma)
+
+    # URLs déjà dans le pipeline → marquage "Déjà ajouté"
+    existing_urls = {
+        c.lien_offre
+        for c in Candidature.query.filter(Candidature.lien_offre.isnot(None)).all()
     }
-    jobs, recruiters = fetch_offres(params)
+
     return render_template(
         "offres/index.html",
         jobs=jobs,
         recruiters=recruiters,
-        params=params,
-        default=DEFAULT_PARAMS,
+        romes=romes,
+        radius=radius,
+        diploma=diploma,
+        existing_urls=existing_urls,
     )
 
 
