@@ -331,29 +331,43 @@ def export_lm_pdf(id):
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
 
-    # Bloc destinataire
+    # Bloc destinataire — aligné à droite
     pdf.set_font("Helvetica", "", 10)
     if entreprise_nom:
-        pdf.cell(0, 6, clean(entreprise_nom), **NL)
+        pdf.cell(0, 6, clean(entreprise_nom), align="R", **NL)
     if entreprise_ville:
-        pdf.cell(0, 6, clean(entreprise_ville), **NL)
+        pdf.cell(0, 6, clean(entreprise_ville), align="R", **NL)
     pdf.ln(3)
 
-    # Date
+    # Date — alignée à droite
     date_fr = datetime.utcnow().strftime("%d/%m/%Y")
     pdf.cell(0, 6, f"Le {date_fr}", align="R", **NL)
     pdf.ln(4)
 
-    # Objet
+    # Objet — aligné à gauche, gras
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(0, 6, clean(f"Objet : Candidature - {candidature.poste}"), **NL)
     pdf.set_font("Helvetica", "", 10)
     pdf.cell(0, 6, "MSc D\xe9veloppement Informatique / IA Epitech (2 ans)", **NL)
-    pdf.ln(4)
+    pdf.ln(6)
 
-    # Corps de la lettre
+    # Corps — strip tout ce que Claude aurait pu mettre avant "Madame, Monsieur,"
+    lm_text = candidature.lettre_motivation
+    madame_idx = lm_text.find("Madame, Monsieur")
+    if madame_idx == -1:
+        madame_idx = lm_text.find("Madame,\nMonsieur")
+    if madame_idx > 0:
+        lm_text = lm_text[madame_idx:]
+
+    # Strip "Cordialement," et tout ce qui suit (signature gérée par le PDF)
+    for closing in ["Cordialement,", "Cordialement,"]:
+        cordialement_idx = lm_text.rfind(closing)
+        if cordialement_idx != -1:
+            lm_text = lm_text[:cordialement_idx].rstrip()
+            break
+
     pdf.set_font("Helvetica", "", 10)
-    for paragraph in candidature.lettre_motivation.split("\n"):
+    for paragraph in lm_text.split("\n"):
         para = clean(paragraph.strip())
         if para:
             pdf.multi_cell(0, 6, para)
@@ -361,8 +375,14 @@ def export_lm_pdf(id):
         else:
             pdf.ln(3)
 
+    # Phrase de clôture fixe
+    pdf.ln(2)
+    pdf.multi_cell(0, 6, "Je serais disponible pour \xe9changer sur la mani\xe8re dont mon profil peut s'int\xe9grer \xe0 vos \xe9quipes.")
+    pdf.ln(6)
+
     # Signature
-    pdf.ln(4)
+    pdf.cell(0, 6, "Cordialement,", **NL)
+    pdf.ln(2)
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(0, 6, "Mondher Adoudi", **NL)
 
