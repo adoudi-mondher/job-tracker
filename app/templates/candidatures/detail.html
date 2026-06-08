@@ -171,9 +171,11 @@ Tracker{% endblock %} {% block content %}
             <input type="hidden" name="notes" value="{{ candidature.notes or '' }}">
             <textarea name="lettre_motivation" rows="16"
                 style="width:100%;font-family:Georgia,serif;font-size:0.9rem;line-height:1.6;border:1px solid #e5e7eb;border-radius:6px;padding:0.75rem;resize:vertical;">{{ candidature.lettre_motivation }}</textarea>
-            <div style="margin-top:0.75rem;">
+            <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
                 <button type="submit" class="btn btn-primary btn-sm">💾 Sauvegarder</button>
-                <small style="color:#6b7280;margin-left:0.75rem;">Brouillon généré par Claude · modifiable librement</small>
+                <a href="{{ url_for('candidatures.export_lm_pdf', id=candidature.id) }}"
+                   class="btn btn-secondary btn-sm" target="_blank">📄 Télécharger PDF</a>
+                <small style="color:#6b7280;margin-left:0.25rem;">Brouillon généré par Claude · modifiable librement</small>
             </div>
         </form>
     </div>

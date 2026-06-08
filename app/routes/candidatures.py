@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+from io import BytesIO
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, current_app, flash, redirect, render_template, request, url_for
 
 from app import db
+from app.lm_template import LM_TEMPLATE
 from app.models import Candidature, Entreprise
 from app.routes.main import login_required
 from app.webhooks import send_webhook
@@ -90,7 +92,7 @@ def nouvelle():
         else:
             send_webhook(
                 current_app.config["N8N_WEBHOOK_LM"],
-                {"candidature_id": candidature.id},
+                {"candidature_id": candidature.id, "lm_template": LM_TEMPLATE},
             )
             flash("Candidature ajoutée. Lettre de motivation en cours de génération…", "info")
 
@@ -159,7 +161,7 @@ def changer_statut(id):
         if nouveau_statut == "À envoyer" and ancien_statut != "À envoyer":
             send_webhook(
                 current_app.config["N8N_WEBHOOK_LM"],
-                {"candidature_id": candidature.id},
+                {"candidature_id": candidature.id, "lm_template": LM_TEMPLATE},
             )
 
     return render_template(
@@ -279,5 +281,97 @@ def export():
     return Response(
         output.getvalue(),
         mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+# ── Export LM → PDF ───────────────────────────────────────────────────────────
+
+
+@candidatures_bp.route("/<int:id>/lm.pdf")
+@login_required
+def export_lm_pdf(id):
+    from fpdf import FPDF
+
+    candidature = Candidature.query.get_or_404(id)
+    if not candidature.lettre_motivation:
+        flash("Aucune lettre de motivation disponible pour cette candidature.", "warning")
+        return redirect(url_for("candidatures.detail", id=id))
+
+    entreprise_nom = candidature.entreprise.nom if candidature.entreprise else ""
+    entreprise_ville = candidature.entreprise.localisation if candidature.entreprise else ""
+
+    NL = {"new_x": "LMARGIN", "new_y": "NEXT"}
+    FONTS = r"C:\Windows\Fonts"
+
+    class LM_PDF(FPDF):
+        def header(self):
+            self.set_font("Arial", "B", 13)
+            self.cell(0, 8, "Mondher Adoudi", **NL)
+            self.set_font("Arial", "", 9)
+            self.set_text_color(80, 80, 80)
+            contacts = "adoudi.mondher@gmail.com  \xb7  06 67 06 61 96  \xb7  linkedin.com/in/mondher-adoudi  \xb7  github.com/adoudi-mondher"
+            self.cell(0, 5, contacts, **NL)
+            self.set_text_color(0, 0, 0)
+            self.set_draw_color(180, 180, 180)
+            self.line(self.l_margin, self.get_y() + 2, self.w - self.r_margin, self.get_y() + 2)
+            self.ln(6)
+
+    pdf = LM_PDF(orientation="P", unit="mm", format="A4")
+    pdf.add_font("Arial", "", rf"{FONTS}\arial.ttf")
+    pdf.add_font("Arial", "B", rf"{FONTS}\arialbd.ttf")
+    pdf.set_margins(left=22, top=20, right=22)
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+
+    # Bloc destinataire
+    pdf.set_font("Arial", "", 10)
+    if entreprise_nom:
+        pdf.cell(0, 6, entreprise_nom, **NL)
+    if entreprise_ville:
+        pdf.cell(0, 6, entreprise_ville, **NL)
+    pdf.ln(3)
+
+    # Date
+    date_fr = datetime.utcnow().strftime("%d/%m/%Y")
+    pdf.cell(0, 6, f"Metz, le {date_fr}", align="R", **NL)
+    pdf.ln(4)
+
+    # Objet
+    pdf.set_font("Arial", "B", 10)
+    pdf.cell(0, 6, f"Objet : Candidature – {candidature.poste}", **NL)
+    pdf.set_font("Arial", "", 10)
+    pdf.cell(0, 6, "• MSc D\xe9veloppement Informatique / IA Epitech (2 ans)", **NL)
+    pdf.ln(4)
+
+    # Corps de la lettre
+    pdf.set_font("Arial", "", 10)
+    for paragraph in candidature.lettre_motivation.split("\n"):
+        para = paragraph.strip()
+        if para:
+            pdf.multi_cell(0, 6, para)
+            pdf.ln(2)
+        else:
+            pdf.ln(3)
+
+    # Signature
+    pdf.ln(4)
+    pdf.multi_cell(0, 6, "Je suis disponible pour un \xe9change d\xe8s que vous le souhaitez.")
+    pdf.ln(4)
+    pdf.cell(0, 6, "Cordialement,", **NL)
+    pdf.set_font("Arial", "B", 10)
+    pdf.cell(0, 6, "Mondher Adoudi", **NL)
+
+    buf = BytesIO()
+    pdf.output(buf)
+    buf.seek(0)
+
+    safe_poste = "".join(c if c.isalnum() or c in " -_" else "_" for c in candidature.poste)
+    safe_entreprise = "".join(c if c.isalnum() or c in " -_" else "_" for c in entreprise_nom)
+    filename = f"LM_{safe_poste}_{safe_entreprise}.pdf".replace(" ", "_")
+
+    return Response(
+        buf.getvalue(),
+        mimetype="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
