@@ -341,7 +341,7 @@ def export_lm_pdf(id):
 
     # Date
     date_fr = datetime.utcnow().strftime("%d/%m/%Y")
-    pdf.cell(0, 6, f"Metz, le {date_fr}", align="R", **NL)
+    pdf.cell(0, 6, f"Le {date_fr}", align="R", **NL)
     pdf.ln(4)
 
     # Objet
@@ -363,9 +363,6 @@ def export_lm_pdf(id):
 
     # Signature
     pdf.ln(4)
-    pdf.multi_cell(0, 6, "Je suis disponible pour un \xe9change d\xe8s que vous le souhaitez.")
-    pdf.ln(4)
-    pdf.cell(0, 6, "Cordialement,", **NL)
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(0, 6, "Mondher Adoudi", **NL)
 
