@@ -291,6 +291,7 @@ def export():
 @candidatures_bp.route("/<int:id>/lm.pdf")
 @login_required
 def export_lm_pdf(id):
+    import re
     from fpdf import FPDF
 
     candidature = Candidature.query.get_or_404(id)
@@ -301,35 +302,41 @@ def export_lm_pdf(id):
     entreprise_nom = candidature.entreprise.nom if candidature.entreprise else ""
     entreprise_ville = candidature.entreprise.localisation if candidature.entreprise else ""
 
+    def clean(text):
+        """Retire le markdown et normalise les caractères hors latin-1."""
+        text = re.sub(r"\*+([^*]*)\*+", r"\1", text)   # **gras** / *italique*
+        text = re.sub(r"^---+$", "", text, flags=re.MULTILINE)  # séparateurs ---
+        text = text.replace("–", "-").replace("—", "-")  # tirets longs
+        text = text.replace("‘", "'").replace("’", "'")  # apostrophes
+        text = text.replace("“", '"').replace("”", '"')  # guillemets
+        # encode/decode latin-1 : remplace ce qui reste hors portée
+        return text.encode("latin-1", errors="replace").decode("latin-1")
+
     NL = {"new_x": "LMARGIN", "new_y": "NEXT"}
-    FONTS = r"C:\Windows\Fonts"
 
     class LM_PDF(FPDF):
         def header(self):
-            self.set_font("Arial", "B", 13)
+            self.set_font("Helvetica", "B", 13)
             self.cell(0, 8, "Mondher Adoudi", **NL)
-            self.set_font("Arial", "", 9)
+            self.set_font("Helvetica", "", 9)
             self.set_text_color(80, 80, 80)
-            contacts = "adoudi.mondher@gmail.com  \xb7  06 67 06 61 96  \xb7  linkedin.com/in/mondher-adoudi  \xb7  github.com/adoudi-mondher"
-            self.cell(0, 5, contacts, **NL)
+            self.cell(0, 5, "adoudi.mondher@gmail.com  |  06 67 06 61 96  |  linkedin.com/in/mondher-adoudi  |  github.com/adoudi-mondher", **NL)
             self.set_text_color(0, 0, 0)
             self.set_draw_color(180, 180, 180)
             self.line(self.l_margin, self.get_y() + 2, self.w - self.r_margin, self.get_y() + 2)
             self.ln(6)
 
     pdf = LM_PDF(orientation="P", unit="mm", format="A4")
-    pdf.add_font("Arial", "", rf"{FONTS}\arial.ttf")
-    pdf.add_font("Arial", "B", rf"{FONTS}\arialbd.ttf")
     pdf.set_margins(left=22, top=20, right=22)
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
 
     # Bloc destinataire
-    pdf.set_font("Arial", "", 10)
+    pdf.set_font("Helvetica", "", 10)
     if entreprise_nom:
-        pdf.cell(0, 6, entreprise_nom, **NL)
+        pdf.cell(0, 6, clean(entreprise_nom), **NL)
     if entreprise_ville:
-        pdf.cell(0, 6, entreprise_ville, **NL)
+        pdf.cell(0, 6, clean(entreprise_ville), **NL)
     pdf.ln(3)
 
     # Date
@@ -338,16 +345,16 @@ def export_lm_pdf(id):
     pdf.ln(4)
 
     # Objet
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(0, 6, f"Objet : Candidature – {candidature.poste}", **NL)
-    pdf.set_font("Arial", "", 10)
-    pdf.cell(0, 6, "• MSc D\xe9veloppement Informatique / IA Epitech (2 ans)", **NL)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.cell(0, 6, clean(f"Objet : Candidature - {candidature.poste}"), **NL)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, "MSc D\xe9veloppement Informatique / IA Epitech (2 ans)", **NL)
     pdf.ln(4)
 
     # Corps de la lettre
-    pdf.set_font("Arial", "", 10)
+    pdf.set_font("Helvetica", "", 10)
     for paragraph in candidature.lettre_motivation.split("\n"):
-        para = paragraph.strip()
+        para = clean(paragraph.strip())
         if para:
             pdf.multi_cell(0, 6, para)
             pdf.ln(2)
@@ -359,7 +366,7 @@ def export_lm_pdf(id):
     pdf.multi_cell(0, 6, "Je suis disponible pour un \xe9change d\xe8s que vous le souhaitez.")
     pdf.ln(4)
     pdf.cell(0, 6, "Cordialement,", **NL)
-    pdf.set_font("Arial", "B", 10)
+    pdf.set_font("Helvetica", "B", 10)
     pdf.cell(0, 6, "Mondher Adoudi", **NL)
 
     buf = BytesIO()
