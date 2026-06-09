@@ -351,19 +351,46 @@ def export_lm_pdf(id):
     pdf.cell(0, 6, "MSc D\xe9veloppement Informatique / IA Epitech (2 ans)", **NL)
     pdf.ln(6)
 
-    # Corps — strip tout ce que Claude aurait pu mettre avant "Madame, Monsieur,"
+    # Corps — nettoyage robuste du header que Claude inclut parfois
     lm_text = candidature.lettre_motivation
-    madame_idx = lm_text.find("Madame, Monsieur")
-    if madame_idx == -1:
-        madame_idx = lm_text.find("Madame,\nMonsieur")
-    if madame_idx > 0:
-        lm_text = lm_text[madame_idx:]
 
-    # Strip "Cordialement," et tout ce qui suit (signature gérée par le PDF)
+    # 1. Chercher "Madame" comme point de départ idéal
+    for marker in ["Madame, Monsieur,", "Madame, Monsieur", "Madame,\nMonsieur"]:
+        idx = lm_text.find(marker)
+        if idx > 0:
+            lm_text = lm_text[idx:]
+            break
+    else:
+        # 2. Sinon : strip ligne par ligne les patterns d'en-tête connus
+        lines = lm_text.split("\n")
+        header_patterns = re.compile(
+            r'^(Mondher Adoudi|adoudi[@]|adoudi\.mondher|'
+            r'\+33|06 67|linkedin\.com|github\.com|'
+            r'Objet\s*:|Metz,|Le \d|[A-Z][a-z]+, le ).*$',
+            re.IGNORECASE
+        )
+        start = 0
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped and not header_patterns.match(stripped) and len(stripped) > 40:
+                start = i
+                break
+        lm_text = "\n".join(lines[start:])
+
+    # 3. Strip phrase(s) de clôture et signature — tout est géré par le PDF
+    cloture_patterns = [
+        r"Je serais disponible pour [^\n]+\.",
+        r"Je suis disponible pour [^\n]+\.",
+        r"Dans l.attente[^\n]+\.",
+        r"N.h[eé]sitez pas[^\n]+\.",
+    ]
+    for pat in cloture_patterns:
+        lm_text = re.sub(pat, "", lm_text)
+
     for closing in ["Cordialement,", "Cordialement,"]:
-        cordialement_idx = lm_text.rfind(closing)
-        if cordialement_idx != -1:
-            lm_text = lm_text[:cordialement_idx].rstrip()
+        idx = lm_text.rfind(closing)
+        if idx != -1:
+            lm_text = lm_text[:idx].rstrip()
             break
 
     pdf.set_font("Helvetica", "", 10)
