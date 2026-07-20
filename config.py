@@ -14,6 +14,9 @@ class Config:
     N8N_WEBHOOK_ENRICH = os.environ.get('N8N_WEBHOOK_ENRICH', '')
     N8N_WEBHOOK_LM = os.environ.get('N8N_WEBHOOK_LM', '')
 
+    # ── LangGraph multi-agent LM service ─────────────────────────────────────
+    LM_AGENT_URL = os.environ.get('LM_AGENT_URL', '')
+
     # ── France Travail API (W1 — scraping alternance) ─────────────────────────
     FT_CLIENT_ID = os.environ.get('FT_CLIENT_ID', '')
     FT_CLIENT_SECRET = os.environ.get('FT_CLIENT_SECRET', '')

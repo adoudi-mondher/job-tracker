@@ -4,7 +4,6 @@ from io import BytesIO
 from flask import Blueprint, Response, current_app, flash, redirect, render_template, request, url_for
 
 from app import db
-from app.lm_template import LM_TEMPLATE
 from app.models import Candidature, Entreprise
 from app.routes.main import login_required
 from app.webhooks import send_webhook
@@ -91,8 +90,15 @@ def nouvelle():
             flash("Candidature ajoutée. Enrichissement + lettre de motivation en cours de génération…", "info")
         else:
             send_webhook(
-                current_app.config["N8N_WEBHOOK_LM"],
-                {"candidature_id": candidature.id, "lm_template": LM_TEMPLATE},
+                current_app.config["LM_AGENT_URL"],
+                {
+                    "candidature_id": candidature.id,
+                    "poste": candidature.poste,
+                    "entreprise_nom": candidature.entreprise.nom,
+                    "secteur": candidature.entreprise.secteur or "",
+                    "resume_offre": candidature.resume_offre or "",
+                    "stack_technique": candidature.stack_technique or "",
+                },
             )
             flash("Candidature ajoutée. Lettre de motivation en cours de génération…", "info")
 
@@ -160,8 +166,15 @@ def changer_statut(id):
         # On exclut la creation (ancien_statut == "A envoyer" -> pas de changement reel)
         if nouveau_statut == "À envoyer" and ancien_statut != "À envoyer":
             send_webhook(
-                current_app.config["N8N_WEBHOOK_LM"],
-                {"candidature_id": candidature.id, "lm_template": LM_TEMPLATE},
+                current_app.config["LM_AGENT_URL"],
+                {
+                    "candidature_id": candidature.id,
+                    "poste": candidature.poste,
+                    "entreprise_nom": candidature.entreprise.nom,
+                    "secteur": candidature.entreprise.secteur or "",
+                    "resume_offre": candidature.resume_offre or "",
+                    "stack_technique": candidature.stack_technique or "",
+                },
             )
 
     return render_template(
