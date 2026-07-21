@@ -9,8 +9,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 import requests
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel
 
 from db import ensure_table, log_run
@@ -19,9 +18,6 @@ from state import LMState
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-security = HTTPBearer()
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,13 +35,6 @@ class GenerateLMRequest(BaseModel):
     secteur: str = ""
     resume_offre: str = ""
     stack_technique: str = ""
-
-
-def _verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
-    expected = os.environ.get("APP_PASSWORD", "changeme")
-    if credentials.credentials != expected:
-        raise HTTPException(status_code=401, detail="Token invalide")
-    return credentials.credentials
 
 
 def _run_graph(req: GenerateLMRequest) -> None:
@@ -113,10 +102,6 @@ def _run_graph(req: GenerateLMRequest) -> None:
 
 
 @app.post("/generate-lm", status_code=202)
-async def generate_lm(
-    req: GenerateLMRequest,
-    background_tasks: BackgroundTasks,
-    _token: str = Depends(_verify_token),
-):
+async def generate_lm(req: GenerateLMRequest, background_tasks: BackgroundTasks):
     background_tasks.add_task(_run_graph, req)
     return {"status": "accepted", "candidature_id": req.candidature_id}
