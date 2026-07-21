@@ -14,3 +14,9 @@ dist/
 build/
 flask_stdout.log
 flask_stderr.log
+
+# Profil candidat — données personnelles, ne jamais committer
+langgraph-agents/regles_redaction.md
+
+# Divers
+docker-compose.override.yml
