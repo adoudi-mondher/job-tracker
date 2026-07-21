@@ -7,7 +7,7 @@ Tracker{% endblock %} {% block content %}
         <span class="badge badge-abandonné" style="font-size:0.65rem;vertical-align:middle;">📦 Archivée</span>
         {% endif %}
         {% if candidature.source == 'auto' %}
-        <span class="badge" style="font-size:0.65rem;vertical-align:middle;background:#d1fae5;color:#065f46;" title="Importée automatiquement par n8n">🤖 Auto</span>
+        <span class="badge" style="font-size:0.65rem;vertical-align:middle;background:#d1fae5;color:#065f46;" title="Importée automatiquement">🤖 Auto</span>
         {% elif candidature.source == 'lba' %}
         <span class="badge" style="font-size:0.65rem;vertical-align:middle;background:#e0f2fe;color:#0369a1;" title="Importée depuis La Bonne Alternance">LBA</span>
         {% endif %}
@@ -35,12 +35,6 @@ Tracker{% endblock %} {% block content %}
 </div>
 {% endif %}
 
-{# Hint enrichissement : URL renseignée mais résumé pas encore disponible #}
-{% if candidature.lien_offre and not candidature.resume_offre and not candidature.is_archived %}
-<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.25rem;font-size:0.9rem;color:#1d4ed8;">
-    ⏳ Enrichissement automatique en cours — la stack technique et le résumé seront disponibles dans quelques secondes. Actualisez la page.
-</div>
-{% endif %}
 
 <div class="detail-grid">
     <!-- Infos candidature -->
@@ -132,28 +126,19 @@ Tracker{% endblock %} {% block content %}
     </div>
 </div>
 
-<!-- Enrichissement automatique (W2) -->
-{% if candidature.stack_technique or candidature.resume_offre %}
+<!-- Texte de l'offre -->
+{% if candidature.resume_offre %}
 <section class="section">
-    <h2>✨ Enrichissement automatique</h2>
-    <div class="detail-grid">
-        {% if candidature.resume_offre %}
-        <div class="card">
-            <h3 style="font-size:0.95rem;margin-bottom:0.5rem;">Résumé de l'offre</h3>
-            <p style="font-size:0.9rem;color:#374151;white-space:pre-line;">{{ candidature.resume_offre }}</p>
+    <details>
+        <summary style="cursor:pointer;font-size:1rem;font-weight:600;padding:0.25rem 0;">📄 Texte de l'offre</summary>
+        <div class="card" style="margin-top:0.75rem;">
+            <p style="font-size:0.875rem;color:#374151;white-space:pre-line;line-height:1.6;">{{ candidature.resume_offre }}</p>
         </div>
-        {% endif %}
-        {% if candidature.stack_technique %}
-        <div class="card">
-            <h3 style="font-size:0.95rem;margin-bottom:0.5rem;">Stack technique</h3>
-            <p style="font-size:0.9rem;color:#374151;">{{ candidature.stack_technique }}</p>
-        </div>
-        {% endif %}
-    </div>
+    </details>
 </section>
 {% endif %}
 
-<!-- Lettre de motivation (W3) -->
+<!-- Lettre de motivation -->
 {% if candidature.lettre_motivation or not candidature.is_archived %}
 <section class="section">
     <h2>📝 Lettre de motivation</h2>
@@ -169,6 +154,7 @@ Tracker{% endblock %} {% block content %}
             <input type="hidden" name="lien_offre" value="{{ candidature.lien_offre or '' }}">
             <input type="hidden" name="lm_fichier" value="{{ candidature.lm_fichier or '' }}">
             <input type="hidden" name="notes" value="{{ candidature.notes or '' }}">
+            <input type="hidden" name="resume_offre" value="{{ candidature.resume_offre or '' }}">
             <textarea name="lettre_motivation" rows="16"
                 style="width:100%;font-family:Georgia,serif;font-size:0.9rem;line-height:1.6;border:1px solid #e5e7eb;border-radius:6px;padding:0.75rem;resize:vertical;">{{ candidature.lettre_motivation }}</textarea>
             <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
@@ -181,7 +167,7 @@ Tracker{% endblock %} {% block content %}
     </div>
     {% else %}
     <p class="empty-state" style="font-size:0.9rem;color:#6b7280;">
-        Aucun brouillon disponible. Passe le statut à <strong>À envoyer</strong> pour déclencher la génération automatique via n8n, ou rédige-le manuellement via Modifier.
+        Aucun brouillon disponible. La génération démarre automatiquement à la création ou au passage en <strong>À envoyer</strong>. Tu peux aussi rédiger manuellement via Modifier.
     </p>
     {% endif %}
 </section>

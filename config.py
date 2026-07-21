@@ -10,9 +10,6 @@ class Config:
     APP_PASSWORD = os.environ.get('APP_PASSWORD', 'changeme')
     LBA_API_KEY = os.environ.get('LBA_API_KEY', '')
 
-    # ── n8n webhooks sortants ─────────────────────────────────────────────────
-    N8N_WEBHOOK_ENRICH = os.environ.get('N8N_WEBHOOK_ENRICH', '')  # W2 conservé si besoin futur
-
     # ── LangGraph multi-agent LM service ─────────────────────────────────────
     LM_AGENT_URL = os.environ.get('LM_AGENT_URL', '')
 

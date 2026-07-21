@@ -1,6 +1,6 @@
 """
 Utilitaire webhooks sortants — fire & forget
-Envoie les webhooks n8n dans un thread daemon pour ne pas bloquer la requete.
+Envoie les requêtes dans un thread daemon pour ne pas bloquer la requête Flask.
 Les erreurs sont loggees mais jamais remontees a l'utilisateur.
 """
 import logging

@@ -1,6 +1,6 @@
 # Job Tracker 🎯
 
-Dashboard de suivi de candidatures en alternance — Flask + PostgreSQL + HTMX, avec pipeline d'automation IA via n8n.
+Dashboard de suivi de candidatures en alternance — Flask + PostgreSQL + HTMX, avec pipeline de génération IA via LangGraph.
 
 Développé dans le cadre d'une recherche d'alternance MSc IA.  
 Fork-friendly : clone, configure, lance.
@@ -15,7 +15,7 @@ Fork-friendly : clone, configure, lance.
 | Frontend | Jinja2 + HTMX + Chart.js |
 | Base de données | SQLite (dev) / PostgreSQL (prod) |
 | Déploiement | Gunicorn + Docker + Nginx Proxy Manager |
-| Automation | n8n self-hosted + Claude AI (optionnel) |
+| Agents IA | LangGraph + Claude AI (Haiku + Sonnet) |
 
 ---
 
@@ -34,14 +34,17 @@ Fork-friendly : clone, configure, lance.
 - Page **France Travail** : offres alternance IA via l'[API France Travail](https://francetravail.io), filtrage par mots-clés et type de contrat, import manuel sélectif au pipeline
 - Marquage **✅ Déjà dans le pipeline** sur les deux pages pour éviter les doublons
 
-### Automation IA (optionnel — nécessite n8n)
+### Génération de lettres de motivation (LangGraph)
 
-| Workflow | Déclencheur | Action |
-|----------|-------------|--------|
-| **W1** | Cron 7h/jour | Sonde France Travail → notif Telegram avec lien vers la page |
-| **W2** | Ajout d'une candidature avec URL | Fetch de la page, extraction IA (poste, stack, résumé) |
-| **W3** | Statut → "À envoyer" | Génération automatique d'une lettre de motivation par Claude |
-| **W4** | Cron lundi 8h | Digest Telegram hebdomadaire (nouvelles offres, relances dues, entretiens) |
+Pipeline multi-agents déclenché automatiquement à la création ou au changement de statut vers "À envoyer".
+
+| Agent | Modèle | Rôle |
+|-------|--------|------|
+| **Analyste** | claude-haiku-4-5 | Extrait poste, secteur, stack et mots-clés depuis le texte de l'offre |
+| **Rédacteur** | claude-sonnet-5 | Génère la LM en appliquant les règles de style et contextualisation sectorielle |
+| **Vérificateur** | claude-haiku-4-5 | Contrôle programmatique + LLM (interdits, longueur, ton, honnêteté des gaps) |
+
+Boucle de correction automatique (max 2 itérations) si le Vérificateur rejette. Résultat écrit directement dans la candidature via l'API REST. Chaque run est loggué dans `lm_generation_runs` (PostgreSQL).
 
 ---
 
@@ -87,9 +90,9 @@ LBA_API_KEY=ton-token-lba
 FT_CLIENT_ID=PAR_xxx
 FT_CLIENT_SECRET=xxx
 
-# Webhooks n8n sortants (optionnel — workflows W2 et W3)
-N8N_WEBHOOK_ENRICH=https://ton-n8n/webhook/enrich
-N8N_WEBHOOK_LM=https://ton-n8n/webhook/lettre-motivation
+# LangGraph — génération LM (optionnel — désactive la génération si absent)
+ANTHROPIC_API_KEY=sk-ant-...
+LM_AGENT_URL=http://langgraph-agents:8001/generate-lm
 ```
 
 ---
@@ -101,16 +104,28 @@ job-tracker/
 ├── app/
 │   ├── __init__.py           # Factory Flask + enregistrement blueprints
 │   ├── models.py             # Entreprise / Candidature / Interaction
-│   ├── webhooks.py           # Fire-and-forget webhooks n8n
+│   ├── webhooks.py           # Fire-and-forget webhooks sortants
 │   ├── routes/
 │   │   ├── main.py           # Dashboard + authentification
 │   │   ├── entreprises.py    # CRUD entreprises
 │   │   ├── candidatures.py   # CRUD candidatures + HTMX statut + archivage
 │   │   ├── interactions.py   # Historique interactions
 │   │   ├── offres.py         # Pages Découvrir (LBA) + France Travail
-│   │   └── api.py            # API REST (automation n8n)
+│   │   └── api.py            # API REST (LangGraph write-back)
 │   ├── templates/
 │   └── static/
+├── langgraph-agents/
+│   ├── main.py               # FastAPI — POST /generate-lm
+│   ├── graph.py              # StateGraph LangGraph
+│   ├── state.py              # LMState TypedDict
+│   ├── nodes/
+│   │   ├── analyste.py       # Extraction structurée de l'offre
+│   │   ├── redacteur.py      # Génération LM
+│   │   └── verificateur.py   # Contrôle qualité + boucle correction
+│   ├── db.py                 # Logging PostgreSQL lm_generation_runs
+│   ├── regles_redaction.md   # Profil candidat + règles de style
+│   ├── requirements.txt
+│   └── Dockerfile
 ├── config.py
 ├── run.py
 ├── Dockerfile
@@ -132,10 +147,10 @@ localisation        date_envoi                     notes
 site_web            statut
 contact_nom         lien_offre
 contact_email       date_relance
-notes               source                 ← "manual" | "auto"
-                    stack_technique        ← rempli par W2 (IA)
-                    resume_offre           ← rempli par W2 (IA)
-                    lettre_motivation      ← rempli par W3 (IA)
+notes               source                 ← "manual" | "lba"
+                    resume_offre           ← texte complet de l'offre (saisi)
+                    stack_technique        ← extrait par l'Analyste LangGraph
+                    lettre_motivation      ← généré par le Rédacteur LangGraph
                     archived_at            ← soft delete
 ```
 
@@ -153,12 +168,12 @@ Authorization: Bearer <APP_PASSWORD>
 | Méthode | Route | Description |
 |---------|-------|-------------|
 | GET | `/api/candidatures` | Liste les candidatures actives |
-| POST | `/api/candidatures` | Crée une candidature (scraping W1) |
+| POST | `/api/candidatures` | Crée une candidature |
 | GET | `/api/candidatures/<id>` | Détail d'une candidature |
-| PATCH | `/api/candidatures/<id>` | Mise à jour partielle (enrichissement W2/W3) |
+| PATCH | `/api/candidatures/<id>` | Mise à jour partielle (write-back LangGraph) |
 | GET | `/api/candidatures/relances` | Candidatures avec relance due |
-| GET | `/api/candidatures/digest` | Données agrégées pour digest Telegram (W4) |
-| POST | `/api/scrape` | Sonde France Travail — compte les nouvelles offres sans créer |
+| GET | `/api/candidatures/digest` | Données agrégées (digest hebdomadaire) |
+| POST | `/api/scrape` | Sonde France Travail — compte les nouvelles offres |
 
 ---
 
@@ -196,28 +211,6 @@ Les résultats sont filtrés sur les zones cibles. L'import au pipeline est **ma
 2. Crée une application et souscris à l'API **"Offres d'emploi v2"** (gratuit)
 3. Récupère `client_id` et `client_secret`
 4. Ajoute `FT_CLIENT_ID` et `FT_CLIENT_SECRET` dans ton `.env`
-
----
-
-## Automation n8n (optionnel)
-
-L'app est conçue pour fonctionner standalone ou couplée à **n8n self-hosted** pour automatiser une partie du process.
-
-### W2 — Enrichissement automatique
-
-Déclenché à l'ajout d'une candidature avec URL. n8n fetch la page de l'offre, Claude extrait le poste, la stack technique et un résumé, et patch la candidature via `PATCH /api/candidatures/<id>`.
-
-### W3 — Lettre de motivation IA
-
-Déclenché quand le statut passe à "À envoyer". Claude génère une lettre de motivation personnalisée basée sur le profil et les infos de l'offre, stockée dans `lettre_motivation`.
-
-### W4 — Digest Telegram hebdomadaire
-
-Chaque lundi à 8h : résumé des nouvelles candidatures, relances dues et entretiens en cours.
-
-### W1 — Sonde quotidienne France Travail
-
-Chaque matin à 7h : compte les nouvelles offres disponibles et envoie une notification Telegram avec lien direct vers la page France Travail.
 
 ---
 
