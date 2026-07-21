@@ -72,35 +72,27 @@ def nouvelle():
             type_contrat=request.form.get("type_contrat", "Alternance"),
             date_envoi=date_envoi,
             statut=request.form.get("statut", "À envoyer"),
-            lien_offre=request.form.get("lien_offre"),
+            lien_offre=request.form.get("lien_offre") or None,
             lm_fichier=request.form.get("lm_fichier"),
             date_relance=date_envoi + timedelta(days=7),
             notes=request.form.get("notes"),
+            resume_offre=request.form.get("resume_offre") or None,
         )
         db.session.add(candidature)
         db.session.commit()
 
-        # ── W2 : enrichissement auto si URL → W2 chainera W3 en fin de workflow
-        # ── W3 : génération LM directe si pas d'URL
-        if candidature.lien_offre:
-            send_webhook(
-                current_app.config["N8N_WEBHOOK_ENRICH"],
-                {"candidature_id": candidature.id, "url": candidature.lien_offre},
-            )
-            flash("Candidature ajoutée. Enrichissement + lettre de motivation en cours de génération…", "info")
-        else:
-            send_webhook(
-                current_app.config["LM_AGENT_URL"],
-                {
-                    "candidature_id": candidature.id,
-                    "poste": candidature.poste,
-                    "entreprise_nom": candidature.entreprise.nom,
-                    "secteur": candidature.entreprise.secteur or "",
-                    "resume_offre": candidature.resume_offre or "",
-                    "stack_technique": candidature.stack_technique or "",
-                },
-            )
-            flash("Candidature ajoutée. Lettre de motivation en cours de génération…", "info")
+        send_webhook(
+            current_app.config["LM_AGENT_URL"],
+            {
+                "candidature_id": candidature.id,
+                "poste": candidature.poste,
+                "entreprise_nom": candidature.entreprise.nom,
+                "secteur": candidature.entreprise.secteur or "",
+                "resume_offre": candidature.resume_offre or "",
+                "stack_technique": "",
+            },
+        )
+        flash("Candidature ajoutée. Lettre de motivation en cours de génération…", "info")
 
         # Redirection vers le detail pour voir l'enrichissement
         return redirect(url_for("candidatures.detail", id=candidature.id))
@@ -130,7 +122,8 @@ def modifier(id):
             request.form["date_envoi"], "%Y-%m-%d"
         ).date()
         candidature.statut = request.form.get("statut")
-        candidature.lien_offre = request.form.get("lien_offre")
+        candidature.lien_offre = request.form.get("lien_offre") or None
+        candidature.resume_offre = request.form.get("resume_offre") or None
         candidature.lm_fichier = request.form.get("lm_fichier")
         candidature.notes = request.form.get("notes")
         # lettre_motivation : present dans le form rapide du detail OU dans le form complet
