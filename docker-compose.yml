@@ -48,6 +48,8 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - APP_PASSWORD=${APP_PASSWORD}
       - FLASK_API_URL=http://job-tracker:5000
+    volumes:
+      - ./langgraph-agents/regles_redaction.md:/app/regles_redaction.md:ro
     depends_on:
       job-tracker-db:
         condition: service_healthy
