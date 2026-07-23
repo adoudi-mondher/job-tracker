@@ -20,3 +20,6 @@ langgraph-agents/regles_redaction.md
 
 # Divers
 docker-compose.override.yml
+
+# Config locale éditeur/IDE
+.claude/
