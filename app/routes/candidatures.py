@@ -4,7 +4,7 @@ from io import BytesIO
 from flask import Blueprint, Response, current_app, flash, redirect, render_template, request, url_for
 
 from app import db
-from app.models import Candidature, Entreprise
+from app.models import Candidature, Entreprise, Interaction
 from app.routes.main import login_required
 from app.webhooks import send_webhook
 
@@ -153,6 +153,14 @@ def changer_statut(id):
     nouveau_statut = request.form.get("statut")
     if nouveau_statut in Candidature.STATUTS:
         candidature.statut = nouveau_statut
+
+        if nouveau_statut == "Entretien" and ancien_statut != "Entretien":
+            db.session.add(Interaction(
+                candidature_id=candidature.id,
+                type_interaction="Entretien",
+                notes="Entretien enregistré automatiquement lors du changement de statut.",
+            ))
+
         db.session.commit()
 
         # ── W3 : generation LM quand on passe explicitement a "A envoyer" ─────
