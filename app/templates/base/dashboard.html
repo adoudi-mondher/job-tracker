@@ -44,10 +44,10 @@
         <tbody>
             {% for c in relances_dues %}
             <tr>
-                <td><strong>{{ c.entreprise.nom }}</strong></td>
-                <td>{{ c.poste }}</td>
-                <td>{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
-                <td><span class="badge badge-warning">J+{{ c.jours_depuis_envoi }}</span></td>
+                <td data-label="Entreprise"><strong>{{ c.entreprise.nom }}</strong></td>
+                <td data-label="Poste">{{ c.poste }}</td>
+                <td data-label="Envoyée le">{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
+                <td data-label="Jours"><span class="badge badge-warning">J+{{ c.jours_depuis_envoi }}</span></td>
                 <td><a href="{{ url_for('candidatures.detail', id=c.id) }}" class="btn btn-sm">Voir</a></td>
             </tr>
             {% endfor %}
@@ -72,10 +72,10 @@
         <tbody>
             {% for i in interactions_recentes %}
             <tr>
-                <td>{{ i.date.strftime('%d/%m %H:%M') }}</td>
-                <td>{{ i.candidature.entreprise.nom }}</td>
-                <td><span class="badge">{{ i.type_interaction }}</span></td>
-                <td class="notes-cell">{{ i.notes or '—' }}</td>
+                <td data-label="Date">{{ i.date.strftime('%d/%m %H:%M') }}</td>
+                <td data-label="Entreprise">{{ i.candidature.entreprise.nom }}</td>
+                <td data-label="Type"><span class="badge">{{ i.type_interaction }}</span></td>
+                <td data-label="Notes" class="notes-cell">{{ i.notes or '—' }}</td>
             </tr>
             {% endfor %}
         </tbody>

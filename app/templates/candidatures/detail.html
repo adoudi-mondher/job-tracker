@@ -201,9 +201,9 @@ Tracker{% endblock %} {% block content %}
                 {% for i in candidature.interactions | sort(attribute='date',
                 reverse=True) %}
                 <tr>
-                    <td>{{ i.date.strftime('%d/%m/%Y %H:%M') }}</td>
-                    <td><span class="badge">{{ i.type_interaction }}</span></td>
-                    <td>{{ i.notes or '—' }}</td>
+                    <td data-label="Date">{{ i.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td data-label="Type"><span class="badge">{{ i.type_interaction }}</span></td>
+                    <td data-label="Notes">{{ i.notes or '—' }}</td>
                     <td>
                         {% if not candidature.is_archived %}
                         <form
