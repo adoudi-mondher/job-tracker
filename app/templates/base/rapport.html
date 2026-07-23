@@ -45,6 +45,48 @@
       body { padding: 16px; }
       .stats { page-break-inside: avoid; }
     }
+
+    /* Mobile first fix : au-dessous de 640px, chaque ligne de tableau devient une card */
+    @media (max-width: 640px) {
+      body { padding: 16px; font-size: 13px; }
+      .stat { min-width: calc(50% - 6px); flex: none; }
+
+      table, thead, tbody, th, tr, td { display: block; }
+      table { border: none; margin-bottom: 24px; }
+      thead { position: absolute; left: -9999px; top: -9999px; }
+
+      tr {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+      }
+      .section-alert tr { border-color: #ffc9c9; }
+
+      td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f1f3f5;
+        text-align: right;
+        white-space: normal;
+        word-break: break-word;
+      }
+      td:first-child { padding-top: 0; }
+      tr:last-child td:last-child { border-bottom: none; }
+
+      td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #888;
+        text-align: left;
+        flex-shrink: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -90,10 +132,10 @@
       <tbody>
         {% for c in entretiens_refuses %}
         <tr>
-          <td><strong>{{ c.entreprise.nom }}</strong>{% if c.entreprise.localisation %}<br><span style="color:#888;font-size:12px">{{ c.entreprise.localisation }}</span>{% endif %}</td>
-          <td>{{ c.poste }}</td>
-          <td style="white-space:nowrap">{{ c.date_envoi.strftime('%d/%m/%Y') if c.date_envoi else '—' }}</td>
-          <td style="color:#555">{{ c.notes or '—' }}</td>
+          <td data-label="Entreprise"><strong>{{ c.entreprise.nom }}</strong>{% if c.entreprise.localisation %}<br><span style="color:#888;font-size:12px">{{ c.entreprise.localisation }}</span>{% endif %}</td>
+          <td data-label="Poste">{{ c.poste }}</td>
+          <td data-label="Date envoi" style="white-space:nowrap">{{ c.date_envoi.strftime('%d/%m/%Y') if c.date_envoi else '—' }}</td>
+          <td data-label="Notes" style="color:#555">{{ c.notes or '—' }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -124,11 +166,11 @@
         'Abandonné': 'badge-abandonne'
       } %}
       <tr>
-        <td><strong>{{ c.entreprise.nom }}</strong>{% if c.entreprise.localisation %}<br><span style="color:#888;font-size:12px">{{ c.entreprise.localisation }}</span>{% endif %}</td>
-        <td>{{ c.poste }}</td>
-        <td style="color:#666">{{ c.type_contrat }}</td>
-        <td style="white-space:nowrap">{{ c.date_envoi.strftime('%d/%m/%Y') if c.date_envoi else '—' }}</td>
-        <td><span class="badge {{ badge.get(c.statut, '') }}">{{ c.statut }}</span></td>
+        <td data-label="Entreprise"><strong>{{ c.entreprise.nom }}</strong>{% if c.entreprise.localisation %}<br><span style="color:#888;font-size:12px">{{ c.entreprise.localisation }}</span>{% endif %}</td>
+        <td data-label="Poste">{{ c.poste }}</td>
+        <td data-label="Type" style="color:#666">{{ c.type_contrat }}</td>
+        <td data-label="Date envoi" style="white-space:nowrap">{{ c.date_envoi.strftime('%d/%m/%Y') if c.date_envoi else '—' }}</td>
+        <td data-label="Statut"><span class="badge {{ badge.get(c.statut, '') }}">{{ c.statut }}</span></td>
       </tr>
       {% endfor %}
     </tbody>
