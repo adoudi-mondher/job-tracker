@@ -92,11 +92,11 @@ irréversible avec confirmation #} {% if candidatures.total > 0 %}
         <tbody>
             {% for c in candidatures.items %}
             <tr {% if archives %}style="opacity:.75;" {% endif %}>
-                <td>
+                <td data-label="Entreprise">
                     <strong>{{ c.entreprise.nom }}</strong><br />
                     <small>{{ c.entreprise.localisation or '' }}</small>
                 </td>
-                <td>
+                <td data-label="Poste">
                     {{ c.poste }}
                     {% if c.source == 'auto' %}
                     <span class="badge" style="font-size:0.7rem;background:#d1fae5;color:#065f46;" title="Importée automatiquement">🤖</span>
@@ -104,9 +104,9 @@ irréversible avec confirmation #} {% if candidatures.total > 0 %}
                     <span class="badge" style="font-size:0.7rem;background:#e0f2fe;color:#0369a1;" title="La Bonne Alternance">LBA</span>
                     {% endif %}
                 </td>
-                <td><span class="badge">{{ c.type_contrat }}</span></td>
-                <td>{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
-                <td>
+                <td data-label="Type"><span class="badge">{{ c.type_contrat }}</span></td>
+                <td data-label="Envoyée le">{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
+                <td data-label="Statut">
                     {% if archives %}
                     <span class="badge badge-abandonné">{{ c.statut }}</span>
                     {% else %}
@@ -116,7 +116,7 @@ irréversible avec confirmation #} {% if candidatures.total > 0 %}
                     </div>
                     {% endif %}
                 </td>
-                <td>
+                <td data-label="{{ 'Archivée le' if archives else 'Relance' }}">
                     {% if archives %}
                     <small>{{ c.archived_at.strftime('%d/%m/%Y') }}</small>
                     {% else %} {% if c.relance_due %}

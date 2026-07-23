@@ -49,17 +49,17 @@
     <tbody>
         {% for e in entreprises.items %}
         <tr>
-            <td><strong>{{ e.nom }}</strong></td>
-            <td>{{ e.secteur or '—' }}</td>
-            <td>{{ e.localisation or '—' }}</td>
-            <td>
+            <td data-label="Nom"><strong>{{ e.nom }}</strong></td>
+            <td data-label="Secteur">{{ e.secteur or '—' }}</td>
+            <td data-label="Localisation">{{ e.localisation or '—' }}</td>
+            <td data-label="Contact">
                 {% if e.contact_email %}
                     <a href="mailto:{{ e.contact_email }}">{{ e.contact_nom or e.contact_email }}</a>
                 {% else %}
                     {{ e.contact_nom or '—' }}
                 {% endif %}
             </td>
-            <td>{{ e.candidatures|length }}</td>
+            <td data-label="Candidatures">{{ e.candidatures|length }}</td>
             <td class="actions">
                 <a href="{{ url_for('entreprises.modifier', id=e.id) }}" class="btn btn-sm">Modifier</a>
                 <form method="POST" action="{{ url_for('entreprises.supprimer', id=e.id) }}"
