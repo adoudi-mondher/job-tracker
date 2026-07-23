@@ -10,8 +10,6 @@ from flask import (
     session,
     url_for,
 )
-from sqlalchemy.orm import joinedload
-
 from app.models import Candidature, Entreprise, Interaction
 
 main_bp = Blueprint("main", __name__)
@@ -46,17 +44,20 @@ def rapport():
     toutes = (
         Candidature.query
         .filter(Candidature.archived_at.is_(None))
-        .options(joinedload(Candidature.interactions))
         .order_by(Candidature.date_envoi.desc())
         .all()
     )
 
     stats = Counter(c.statut for c in toutes)
 
+    ids_avec_entretien = {
+        i.candidature_id
+        for i in Interaction.query.filter_by(type_interaction="Entretien").all()
+    }
+
     entretiens_refuses = [
         c for c in toutes
-        if c.statut == "Refus"
-        and any(i.type_interaction == "Entretien" for i in c.interactions)
+        if c.statut == "Refus" and c.id in ids_avec_entretien
     ]
 
     return render_template(
