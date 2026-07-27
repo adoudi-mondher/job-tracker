@@ -299,6 +299,67 @@ def export():
     )
 
 
+# ── Export Offre → PDF ────────────────────────────────────────────────────────
+
+
+@candidatures_bp.route("/<int:id>/offre.pdf")
+@login_required
+def export_offre_pdf(id):
+    from fpdf import FPDF
+
+    candidature = Candidature.query.get_or_404(id)
+    if not candidature.resume_offre:
+        flash("Aucun texte d'offre disponible pour cette candidature.", "warning")
+        return redirect(url_for("candidatures.detail", id=id))
+
+    entreprise_nom = candidature.entreprise.nom if candidature.entreprise else ""
+
+    def clean(text):
+        text = text.replace("–", "-").replace("—", "-")
+        text = text.replace("‘", "'").replace("’", "'")
+        text = text.replace("“", '"').replace("”", '"')
+        return text.encode("latin-1", errors="replace").decode("latin-1")
+
+    NL = {"new_x": "LMARGIN", "new_y": "NEXT"}
+
+    pdf = FPDF(orientation="P", unit="mm", format="A4")
+    pdf.set_margins(left=22, top=20, right=22)
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.cell(0, 8, clean(f"{candidature.poste}"), **NL)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(80, 80, 80)
+    pdf.cell(0, 6, clean(entreprise_nom), **NL)
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_draw_color(180, 180, 180)
+    pdf.line(pdf.l_margin, pdf.get_y() + 3, pdf.w - pdf.r_margin, pdf.get_y() + 3)
+    pdf.ln(8)
+
+    pdf.set_font("Helvetica", "", 10)
+    for line in candidature.resume_offre.splitlines():
+        cleaned = clean(line.strip())
+        if cleaned:
+            pdf.multi_cell(0, 5.5, cleaned)
+        else:
+            pdf.ln(3)
+
+    buf = BytesIO()
+    pdf.output(buf)
+    buf.seek(0)
+
+    safe_poste = "".join(c if c.isalnum() or c in " -_" else "_" for c in candidature.poste)
+    safe_entreprise = "".join(c if c.isalnum() or c in " -_" else "_" for c in entreprise_nom)
+    filename = f"Offre_{safe_poste}_{safe_entreprise}.pdf".replace(" ", "_")
+
+    return Response(
+        buf.getvalue(),
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 # ── Export LM → PDF ───────────────────────────────────────────────────────────
 
 

@@ -133,6 +133,10 @@ Tracker{% endblock %} {% block content %}
         <summary style="cursor:pointer;font-size:1rem;font-weight:600;padding:0.25rem 0;">📄 Texte de l'offre</summary>
         <div class="card" style="margin-top:0.75rem;">
             <p style="font-size:0.875rem;color:#374151;white-space:pre-line;line-height:1.6;">{{ candidature.resume_offre }}</p>
+            <div style="margin-top:0.75rem;">
+                <a href="{{ url_for('candidatures.export_offre_pdf', id=candidature.id) }}"
+                   class="btn btn-secondary btn-sm" target="_blank">📄 Télécharger PDF</a>
+            </div>
         </div>
     </details>
 </section>
