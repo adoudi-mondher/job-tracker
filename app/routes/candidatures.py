@@ -337,11 +337,13 @@ def export_offre_pdf(id):
     pdf.line(pdf.l_margin, pdf.get_y() + 3, pdf.w - pdf.r_margin, pdf.get_y() + 3)
     pdf.ln(8)
 
+    import textwrap
     pdf.set_font("Helvetica", "", 10)
     for line in candidature.resume_offre.splitlines():
         cleaned = clean(line.strip())
         if cleaned:
-            pdf.multi_cell(0, 5.5, cleaned)
+            for fragment in textwrap.wrap(cleaned, width=90, break_long_words=True, break_on_hyphens=True):
+                pdf.multi_cell(0, 5.5, fragment)
         else:
             pdf.ln(3)
 
