@@ -240,6 +240,19 @@ Alias pratique pour les mises à jour (`~/.bashrc`) :
 alias deploy='git pull && docker compose down && docker compose up -d --build'
 ```
 
+### Mise à jour du profil candidat (`regles_redaction.md`)
+
+> ⚠️ `regles_redaction.md` est chargé **une seule fois au démarrage** du container `langgraph-agents`. Mettre à jour le fichier sur le VPS sans redémarrer le container laissera l'ancienne version en mémoire — les LM générées seront incorrectes.
+
+```bash
+# 1. Modifier le fichier localement
+# 2. SCP vers le VPS
+scp -P <PORT> langgraph-agents/regles_redaction.md debian@jobs.mondher.ch:/opt/docker/job-tracker/langgraph-agents/regles_redaction.md
+
+# 3. Redémarrer le container (obligatoire)
+docker compose restart langgraph-agents
+```
+
 ---
 
 ## Licence
