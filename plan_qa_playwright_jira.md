@@ -148,9 +148,9 @@ Si une offre spécifique insiste sur Selenium, Cypress ou un outil non pratiqué
 ## Checklist d'exécution (session dédiée)
 
 ### Volet Playwright / Job Tracker
-- [ ] `pip install pytest-playwright` + `playwright install`
-- [ ] Écrire 5-8 tests UI sur Job Tracker
-- [ ] Faire tourner les tests, vérifier qu'ils passent
+- [x] `pip install pytest-playwright` + `playwright install`
+- [x] Écrire 5 tests UI sur Job Tracker (auth, ajout candidature, archivage, filtre statut, navigation menu)
+- [x] Faire tourner les tests, vérifier qu'ils passent — tous verts
 
 ### Jira
 - [ ] Créer compte Jira Cloud + board `QA-JobTracker`

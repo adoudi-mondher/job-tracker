@@ -1,0 +1,3 @@
+# Suppose que requirements.txt est déjà installé.
+# Séparé pour éviter de forcer psycopg2-binary==2.9.9 (pas de wheel Windows/Python 3.14, échoue à la compilation).
+pytest-playwright==0.5.2
