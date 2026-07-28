@@ -118,15 +118,34 @@ Chaque ticket bug doit contenir :
 - **Résultat attendu vs résultat observé**
 - **Lien vers le test Playwright concerné** (si applicable)
 
-### Exemples de tickets à créer (réels, basés sur Job Tracker)
+### Tickets à créer (réels, retrouvés via `git log` sur Job Tracker)
 
-| Titre | Sévérité | Origine |
-|---|---|---|
-| Erreur 500 si champ "entreprise" vide | Majeur | Job Tracker |
-| Offre archivée réapparaît après refresh | Mineur | Job Tracker |
-| Timeout sur enrichissement URL via n8n | Majeur | Job Tracker |
+Bugs effectivement rencontrés et corrigés — à recréer dans Jira en colonne **Fermé** (traçabilité rétroactive), sauf le dernier repéré en écrivant les tests Playwright, à mettre en **À trier**.
 
-**Discours entretien :** *"J'ai structuré mon suivi de bugs sous Jira avec des tickets classés par sévérité, en lien avec mes tests automatisés Playwright."*
+| Titre | Sévérité | Origine | Statut | Commit |
+|---|---|---|---|---|
+| Export PDF offre : mot long sans espace fait planter l'export (`FPDFException`) | Majeur | Export PDF offre | Fermé | `4e9f2b9` |
+| `multi_cell()` en largeur 0 après `pdf.line()` → `FPDFException` "Not enough horizontal space" | Majeur | Export PDF offre | Fermé | `d85835b` |
+| En-tête (nom/email/tel) dupliqué dans le corps de la LM générée par Claude | Mineur | Génération LM (LangGraph) | Fermé | `95f8962` |
+| Phrase de clôture dupliquée dans la LM (Claude + template PDF) | Mineur | Génération LM (LangGraph) | Fermé | `a0b3f68` |
+| Objet de la LM affichait "(2 ans)" après le nom du diplôme, non voulu | Cosmétique | Export PDF LM | Fermé | `0538892` |
+| Filtres entreprises (secteur/localisation) perdus au changement de page | Mineur | Liste entreprises | Fermé | `57441bc` |
+| Secteur vide (`""`) apparaissait comme option de filtre fantôme | Cosmétique | Liste entreprises | Fermé | `17e4013` |
+| `data-label` manquants → tableaux illisibles en vue mobile (candidatures/entreprises) | Mineur | Responsive | Fermé | `9b98617` |
+| Auth Bearer bloquait l'appel interne Docker vers le service LangGraph (`/generate-lm`) | Bloquant | Infra / agents LangGraph | Fermé | `020da0a` |
+| Page "Découvrir" dépend d'un appel live à l'API LBA sans indicateur de chargement (jusqu'à ~10s, 6 appels parallèles) | Mineur | UX / Offres | **À trier** — repéré en écrivant `test_navigation.py` | — |
+
+**Ticket détaillé type** (à reproduire dans Jira pour au moins 1-2 tickets, format complet demandé plus haut) :
+
+> **Titre :** `data-label` manquants → tableaux illisibles en vue mobile (candidatures/entreprises)
+> **Sévérité :** Mineur
+> **Étapes de reproduction :** Ouvrir `/candidatures/` ou `/entreprises/` sur un viewport < 640px.
+> **Attendu :** Chaque cellule de tableau affiche son libellé de colonne (layout "carte" responsive).
+> **Observé :** Cellules sans libellé, tableau illisible en dessous de 640px.
+> **Lien test Playwright :** aucun actuellement — scénario responsive non couvert par la suite (piste d'extension du plan).
+> **Commit de fix :** `9b98617`
+
+**Discours entretien :** *"J'ai structuré mon suivi de bugs sous Jira avec des tickets classés par sévérité, certains reliés à mes tests automatisés Playwright, d'autres remontant des vrais correctifs déjà passés sur le projet — historique et traçabilité, pas des exemples inventés."*
 
 ---
 
