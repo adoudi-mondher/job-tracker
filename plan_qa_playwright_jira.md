@@ -172,10 +172,12 @@ Si une offre spécifique insiste sur Selenium, Cypress ou un outil non pratiqué
 - [x] Faire tourner les tests, vérifier qu'ils passent — tous verts
 
 ### Jira
-- [ ] Créer compte Jira Cloud + board `QA-JobTracker`
-- [ ] Créer tickets réels basés sur bugs déjà rencontrés sur Job Tracker
+- [x] Créer compte Jira Cloud + board `QA-JobTracker` (clé projet `QAJT`, team-managed Kanban)
+- [x] Créer tickets réels basés sur bugs déjà rencontrés sur Job Tracker (QAJT-1 à QAJT-10)
 
 ### Documents
-- [ ] Mettre à jour CV (ligne Compétences : Playwright + Jira)
-- [ ] Mettre à jour aboutme.md (section Stack + Cibles QA)
-- [ ] Ajouter mention ISTQB (en préparation) au même endroit
+- [x] Mettre à jour CV (ligne Compétences : Playwright + Jira) — fait par Mondher dans Canva à partir des formulations proposées
+- [x] Mettre à jour aboutme.md (section Stack + Cibles QA + projets + contextualisation secteur + paragraphe QA type)
+- [x] Mention ISTQB (en préparation) déjà présente aux mêmes endroits
+
+**Plan QA Playwright + Jira : terminé (2026-07-29).**

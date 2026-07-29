@@ -126,8 +126,18 @@ job-tracker/
 │   ├── regles_redaction.md   # Profil candidat + règles de style
 │   ├── requirements.txt
 │   └── Dockerfile
+├── tests/
+│   └── ui/                   # Tests Playwright (UI end-to-end)
+│       ├── conftest.py       # Fixtures : login, création candidature, etc.
+│       ├── test_auth.py
+│       ├── test_candidatures.py
+│       ├── test_archivage.py
+│       ├── test_filtres.py
+│       └── test_navigation.py
 ├── config.py
 ├── run.py
+├── pytest.ini
+├── requirements-dev.txt
 ├── Dockerfile
 ├── docker-compose.yml
 └── requirements.txt
@@ -214,6 +224,22 @@ Les résultats sont filtrés sur les zones cibles. L'import au pipeline est **ma
 
 ---
 
+## Tests
+
+Suite de tests UI end-to-end avec [Playwright](https://playwright.dev/python/) (Python), exécutée contre un serveur Flask local + SQLite — jamais contre la production.
+
+```bash
+pip install -r requirements-dev.txt
+playwright install
+
+pytest tests/ui/            # mode headless
+pytest tests/ui/ --headed   # mode visuel, pour debug
+```
+
+**Scénarios couverts :** authentification (login valide/invalide), ajout de candidature, archivage, filtre par statut, navigation menu.
+
+---
+
 ## Déploiement
 
 ### Local
@@ -247,7 +273,7 @@ alias deploy='git pull && docker compose down && docker compose up -d --build'
 ```bash
 # 1. Modifier le fichier localement
 # 2. SCP vers le VPS
-scp -P <PORT> langgraph-agents/regles_redaction.md debian@jobs.mondher.ch:/opt/docker/job-tracker/langgraph-agents/regles_redaction.md
+scp -P <PORT> langgraph-agents/regles_redaction.md <user>@<ip_VPS>:/opt/docker/job-tracker/langgraph-agents/regles_redaction.md
 
 # 3. Redémarrer le container (obligatoire)
 docker compose restart langgraph-agents
