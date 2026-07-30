@@ -118,7 +118,7 @@ def patch_candidature(id):
 
     PATCHABLE = [
         "poste", "stack_technique", "resume_offre",
-        "lettre_motivation", "notes", "statut", "lien_offre", "source",
+        "lettre_motivation", "message_accompagnement", "notes", "statut", "lien_offre", "source",
     ]
     for field in PATCHABLE:
         if field in data:

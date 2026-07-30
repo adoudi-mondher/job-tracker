@@ -47,6 +47,7 @@ def _run_graph(req: GenerateLMRequest) -> None:
         "stack_technique": req.stack_technique,
         "analyse": {},
         "lm_courante": "",
+        "message_email": "",
         "motifs_rejet": [],
         "nb_iterations": 0,
         "verification": {"conforme": False, "motifs": []},
@@ -59,6 +60,7 @@ def _run_graph(req: GenerateLMRequest) -> None:
         return
 
     lm = final_state["lm_courante"]
+    message_email = final_state.get("message_email", "")
     verification = final_state["verification"]
     nb_iter = final_state["nb_iterations"]
 
@@ -77,9 +79,12 @@ def _run_graph(req: GenerateLMRequest) -> None:
     flask_url = os.environ.get("FLASK_API_URL", "http://job-tracker:5000")
     token = os.environ.get("APP_PASSWORD", "changeme")
     try:
+        payload = {"lettre_motivation": lm}
+        if message_email:
+            payload["message_accompagnement"] = message_email
         resp = requests.patch(
             f"{flask_url}/api/candidatures/{req.candidature_id}",
-            json={"lettre_motivation": lm},
+            json=payload,
             headers={"Authorization": f"Bearer {token}"},
             timeout=10,
         )
