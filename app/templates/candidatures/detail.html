@@ -177,6 +177,39 @@ Tracker{% endblock %} {% block content %}
 </section>
 {% endif %}
 
+<!-- Message d'accompagnement -->
+{% if not candidature.is_archived or candidature.message_accompagnement %}
+<section class="section">
+    <h2>✉️ Message d'accompagnement</h2>
+    <div class="card">
+        <form method="POST" action="{{ url_for('candidatures.modifier', id=candidature.id) }}">
+            <input type="hidden" name="entreprise_id" value="{{ candidature.entreprise_id }}">
+            <input type="hidden" name="poste" value="{{ candidature.poste }}">
+            <input type="hidden" name="type_contrat" value="{{ candidature.type_contrat }}">
+            <input type="hidden" name="date_envoi" value="{{ candidature.date_envoi.isoformat() }}">
+            <input type="hidden" name="statut" value="{{ candidature.statut }}">
+            <input type="hidden" name="lien_offre" value="{{ candidature.lien_offre or '' }}">
+            <input type="hidden" name="lm_fichier" value="{{ candidature.lm_fichier or '' }}">
+            <input type="hidden" name="notes" value="{{ candidature.notes or '' }}">
+            <input type="hidden" name="resume_offre" value="{{ candidature.resume_offre or '' }}">
+            <input type="hidden" name="lettre_motivation" value="{{ candidature.lettre_motivation or '' }}">
+            <textarea id="msg-acc-{{ candidature.id }}" name="message_accompagnement" rows="8"
+                {% if candidature.is_archived %}readonly{% endif %}
+                style="width:100%;font-family:Georgia,serif;font-size:0.9rem;line-height:1.6;border:1px solid #e5e7eb;border-radius:6px;padding:0.75rem;resize:vertical;"
+                placeholder="Corps du mail d'accompagnement pour envoi direct de ta candidature…">{{ candidature.message_accompagnement or '' }}</textarea>
+            <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                {% if not candidature.is_archived %}
+                <button type="submit" class="btn btn-primary btn-sm">💾 Sauvegarder</button>
+                {% endif %}
+                <button type="button" class="btn btn-secondary btn-sm"
+                    onclick="copyMsgAcc('msg-acc-{{ candidature.id }}', this)">📋 Copier</button>
+                <small style="color:#6b7280;margin-left:0.25rem;">À coller dans le corps de ton email</small>
+            </div>
+        </form>
+    </div>
+</section>
+{% endif %}
+
 <!-- Historique interactions -->
 <section class="section">
     <div class="section-header">
@@ -294,4 +327,14 @@ Tracker{% endblock %} {% block content %}
     {% endif %}
 </section>
 
+<script>
+function copyMsgAcc(id, btn) {
+    var ta = document.getElementById(id);
+    navigator.clipboard.writeText(ta.value).then(function() {
+        var orig = btn.textContent;
+        btn.textContent = '✓ Copié !';
+        setTimeout(function() { btn.textContent = orig; }, 1500);
+    });
+}
+</script>
 {% endblock %}

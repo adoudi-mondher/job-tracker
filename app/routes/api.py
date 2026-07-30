@@ -1,3 +1,4 @@
+import hmac
 import re
 from datetime import datetime, timedelta
 from functools import wraps
@@ -16,7 +17,7 @@ def api_key_required(f):
     def decorated(*args, **kwargs):
         auth = request.headers.get("Authorization", "")
         expected = f"Bearer {current_app.config['APP_PASSWORD']}"
-        if auth != expected:
+        if not hmac.compare_digest(auth, expected):
             return jsonify({"error": "Non autorisé"}), 401
         return f(*args, **kwargs)
 

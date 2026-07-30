@@ -129,6 +129,8 @@ def modifier(id):
         # lettre_motivation : present dans le form rapide du detail OU dans le form complet
         if "lettre_motivation" in request.form:
             candidature.lettre_motivation = request.form.get("lettre_motivation") or None
+        if "message_accompagnement" in request.form:
+            candidature.message_accompagnement = request.form.get("message_accompagnement") or None
         db.session.commit()
         flash("Candidature mise à jour.", "success")
         return redirect(url_for("candidatures.detail", id=candidature.id))

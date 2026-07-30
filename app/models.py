@@ -70,6 +70,8 @@ class Candidature(db.Model):
     resume_offre = db.Column(db.Text, nullable=True)
     # Lettre de motivation W3 (brouillon généré par Claude)
     lettre_motivation = db.Column(db.Text, nullable=True)
+    # Message email d'accompagnement (rédigé manuellement pour envoi direct par email)
+    message_accompagnement = db.Column(db.Text, nullable=True)
     # ─────────────────────────────────────────────────────────────────────────
 
     interactions = db.relationship(
@@ -125,6 +127,7 @@ class Candidature(db.Model):
             "stack_technique": self.stack_technique,
             "resume_offre": self.resume_offre,
             "lettre_motivation": self.lettre_motivation,
+            "message_accompagnement": self.message_accompagnement,
         }
 
 

@@ -1,3 +1,4 @@
+import hmac
 from collections import Counter
 from datetime import datetime, timedelta
 
@@ -32,7 +33,7 @@ def login():
     error = None
     if request.method == "POST":
         password = request.form.get("password")
-        if password == current_app.config["APP_PASSWORD"]:
+        if hmac.compare_digest(password, current_app.config["APP_PASSWORD"]):
             session["authenticated"] = True
             return redirect(url_for("main.dashboard"))
         error = "Mot de passe incorrect"
