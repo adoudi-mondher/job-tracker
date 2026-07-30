@@ -7,7 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from nodes.utils import extract_text
 from state import LMState
 
-_llm = ChatAnthropic(model="claude-sonnet-5", max_tokens=2500)
+_llm = ChatAnthropic(model="claude-sonnet-5", max_tokens=4096)
 
 _REGLES = (Path(__file__).parent.parent / "regles_redaction.md").read_text(encoding="utf-8")
 
