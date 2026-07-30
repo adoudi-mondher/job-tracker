@@ -15,6 +15,14 @@ Retourne UNIQUEMENT un objet JSON valide avec les champs suivants :
 - stack_demandee (liste de strings)
 - niveau_requis (string : "Bac+3" | "Bac+4" | "Bac+5" | "non précisé")
 - mots_cles (liste de strings, 3 à 5 éléments différenciants)
+- type_contrat (string : "alternance" | "CDI" | "freelance" | "CDI et freelance" | "non précisé")
+
+Pour type_contrat, explore minutieusement le texte de l'offre à la recherche de signaux explicites :
+- "alternance", "apprentissage", "contrat de professionnalisation", "alternant(e)" → "alternance"
+- "CDI", un salaire brut annuel seul, "statut cadre" → "CDI"
+- "freelance", "indépendant", "TJM", "€/jour", "€/j", "portage salarial" seul → "freelance"
+- Si l'offre mentionne à la fois un salaire ET un tarif journalier freelance (ex. "Salaire : 50-60 K€" et "Freelance : 350-460€/J") → "CDI et freelance"
+- Si aucun signal net → "non précisé"
 """
 
 
@@ -47,6 +55,7 @@ Stack technique mentionnée : {state['stack_technique']}"""
             "stack_demandee": [],
             "niveau_requis": "non précisé",
             "mots_cles": [],
+            "type_contrat": "non précisé",
         }
 
     return {"analyse": analyse}

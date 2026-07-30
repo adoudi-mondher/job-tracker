@@ -13,11 +13,10 @@ _PHRASES_INTERDITES = [
     "C'est avec grand intérêt",
     "c'est avec grand intérêt",
     "peu de profils",
-    "micro-entreprise",
 ]
 
 
-def _check_programmatique(lm: str) -> list[str]:
+def _check_programmatique(lm: str, type_contrat: str = "non précisé") -> list[str]:
     motifs = []
 
     if "—" in lm:
@@ -26,6 +25,12 @@ def _check_programmatique(lm: str) -> list[str]:
     for phrase in _PHRASES_INTERDITES:
         if phrase in lm:
             motifs.append(f"Phrase interdite : '{phrase}'")
+
+    if "micro-entreprise" in lm.lower() and type_contrat not in ("freelance", "CDI et freelance"):
+        motifs.append(
+            "Mention de la micro-entreprise alors que l'offre ne propose pas explicitement de freelance "
+            f"(type_contrat détecté : '{type_contrat}') — à retirer"
+        )
 
     if re.search(r"CesedaIA.{0,30}en production", lm, re.IGNORECASE):
         motifs.append("CesedaIA présenté comme 'en production' — doit être 'en cours'")
@@ -47,7 +52,8 @@ def _check_programmatique(lm: str) -> list[str]:
 
 def verificateur_node(state: LMState) -> dict:
     lm = state["lm_courante"]
-    motifs = _check_programmatique(lm)
+    type_contrat = state.get("analyse", {}).get("type_contrat", "non précisé")
+    motifs = _check_programmatique(lm, type_contrat)
 
     # Vérification LLM du ton uniquement si les checks programmatiques passent
     if not motifs:

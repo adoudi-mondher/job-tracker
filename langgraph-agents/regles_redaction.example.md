@@ -78,6 +78,12 @@
 - Terminer par "Cordialement," sans bloc signature étendu
 - 250-320 mots
 
+### Type de contrat de l'offre → adapter le ton
+Si tu cibles un seul type de contrat (ex. alternance exclusivement), précise-le ici et explique
+comment le Rédacteur doit réagir si une offre CDI/Freelance apparaît malgré tout (ex. donner plus
+de poids aux stages tout en gardant le mot "stage", ne jamais se positionner comme senior).
+Ce champ est détecté automatiquement par l'Analyste (analyse.type_contrat) et transmis au Rédacteur.
+
 ### Interdit
 - [Formule interdite 1]
 - [Formule interdite 2]

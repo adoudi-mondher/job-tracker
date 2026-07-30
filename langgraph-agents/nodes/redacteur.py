@@ -31,11 +31,16 @@ CONSIGNES LETTRE DE MOTIVATION :
 - 250 à 320 mots exactement - compte les mots
 - Commence par l'entreprise ou le secteur, jamais par soi-même
 - Style direct, factuel, sobre - pas de superlatifs, pas d'emphase
-- INTERDIT : tiret em (—), "C'est avec grand intérêt", "peu de profils", mention micro-entreprise
+- INTERDIT : tiret em (—), "C'est avec grand intérêt", "peu de profils"
 - CesedaIA = toujours "en cours", jamais "en production"
 - MSc Epitech = toujours "octobre 2026"
 - Gap technique détecté dans l'offre : le nommer, montrer le domaine adjacent maîtrisé, affirmer la montée en compétence rapide
 - Termine OBLIGATOIREMENT par : "Je suis disponible pour un échange."
+
+CONSIGNES SELON LE TYPE DE CONTRAT (champ analyse.type_contrat) :
+- "alternance" ou "non précisé" : ne rien changer de fondamental. Mettre en avant en priorité les projets personnels (Job Tracker, Fretexia, Saveurs Méditerranéennes, CesedaIA) et présenter les stages comme des stages.
+- "CDI" ou "freelance" ou "CDI et freelance" : garder le mot "stage" pour MOSLTRANS et Saveurs Méditerranéennes (ne jamais mentir sur le statut, le CV les affiche comme stages), mais leur donner plus de poids : décrire les livrables concrets et l'autonomie réelle (architecture définie seul, MVP en prod, RAG en prod, périmètre business), comme une expérience professionnelle à part entière plutôt que comme un stagiaire en observation. Ne jamais se positionner comme senior — rester factuel sur le niveau réel (reconversion + 6 ans Siemens + stages), sans survendre.
+- Mention de la micro-entreprise/freelance : UNIQUEMENT si analyse.type_contrat vaut "freelance" ou "CDI et freelance" (l'offre propose explicitement un TJM en alternative au salarié). Dans ce cas, mentionner le statut de micro-entrepreneur comme option recevable pour la mission. Si type_contrat est "alternance", "CDI" ou "non précisé" : ne jamais l'évoquer.
 
 CONSIGNES MESSAGE D'ACCOMPAGNEMENT (corps du mail) :
 - 3 à 5 phrases, 60 à 100 mots
@@ -50,8 +55,11 @@ CONSIGNES MESSAGE D'ACCOMPAGNEMENT (corps du mail) :
 def redacteur_node(state: LMState) -> dict:
     analyse = state.get("analyse", {})
     motifs = state.get("motifs_rejet", [])
+    type_contrat = analyse.get("type_contrat", "non précisé")
 
     prompt = f"""Rédige la lettre de motivation et le message d'accompagnement pour ce poste.
+
+Type de contrat détecté : {type_contrat}
 
 Analyse structurée de l'offre :
 {analyse}
