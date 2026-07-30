@@ -1,13 +1,20 @@
-import json
 from pathlib import Path
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
+from pydantic import BaseModel, Field
 
-from nodes.utils import extract_text
 from state import LMState
 
-_llm = ChatAnthropic(model="claude-sonnet-5", max_tokens=4096, thinking={"type": "disabled"})
+_llm_base = ChatAnthropic(model="claude-sonnet-5", max_tokens=4096, thinking={"type": "disabled"})
+
+
+class LMOutput(BaseModel):
+    lm: str = Field(description="Corps de la lettre de motivation (250 à 320 mots)")
+    message_email: str = Field(description="Corps du message d'accompagnement (60 à 100 mots)")
+
+
+_llm = _llm_base.with_structured_output(LMOutput)
 
 _REGLES = (Path(__file__).parent.parent / "regles_redaction.md").read_text(encoding="utf-8")
 
@@ -37,26 +44,7 @@ CONSIGNES MESSAGE D'ACCOMPAGNEMENT (corps du mail) :
 - Mentionne que CV et lettre de motivation sont en pièce jointe
 - Termine par une courte disponibilité (ex. "Disponible pour un échange à votre convenance.")
 - Ton naturel et direct — ni trop formel, ni familier
-
----
-
-Retourne UNIQUEMENT un JSON valide avec exactement deux clés :
-{{
-  "lm": "<corps de la lettre>",
-  "message_email": "<corps du mail d'accompagnement>"
-}}
 """
-
-
-def _extract_json(raw: str) -> dict:
-    raw = raw.strip()
-    if raw.startswith("```"):
-        parts = raw.split("```")
-        raw = parts[1] if len(parts) > 1 else raw
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.strip()
-    return json.loads(raw)
 
 
 def redacteur_node(state: LMState) -> dict:
@@ -81,25 +69,14 @@ Contexte complémentaire :
             prompt += f"- {m}\n"
         prompt += "\nRéécris la LM en corrigeant TOUS ces points. Le message_email peut rester identique si non concerné."
 
-    response = _llm.invoke([
+    parsed: LMOutput = _llm.invoke([
         SystemMessage(content=_SYSTEM),
         HumanMessage(content=prompt),
     ])
 
-    raw = extract_text(response).strip()
-
-    try:
-        parsed = _extract_json(raw)
-        lm = parsed.get("lm", "").strip()
-        message_email = parsed.get("message_email", "").strip()
-    except (json.JSONDecodeError, KeyError):
-        # Fallback : le texte brut devient la LM, message_email vide
-        lm = raw
-        message_email = state.get("message_email", "")
-
     return {
-        "lm_courante": lm,
-        "message_email": message_email,
+        "lm_courante": parsed.lm.strip(),
+        "message_email": parsed.message_email.strip(),
         "nb_iterations": state.get("nb_iterations", 0) + 1,
         "motifs_rejet": [],
     }
