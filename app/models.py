@@ -72,6 +72,8 @@ class Candidature(db.Model):
     lettre_motivation = db.Column(db.Text, nullable=True)
     # Message email d'accompagnement (rédigé manuellement pour envoi direct par email)
     message_accompagnement = db.Column(db.Text, nullable=True)
+    # Préparation entretien (pitch, hard/soft skills, transposition stack) générée par le Rédacteur
+    prep_entretien = db.Column(db.Text, nullable=True)
     # ─────────────────────────────────────────────────────────────────────────
 
     interactions = db.relationship(
@@ -128,6 +130,7 @@ class Candidature(db.Model):
             "resume_offre": self.resume_offre,
             "lettre_motivation": self.lettre_motivation,
             "message_accompagnement": self.message_accompagnement,
+            "prep_entretien": self.prep_entretien,
         }
 
 

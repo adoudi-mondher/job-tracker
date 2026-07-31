@@ -14,3 +14,15 @@ class LMState(TypedDict):
     motifs_rejet: list[str]  # feedback Vérificateur vers Rédacteur
     nb_iterations: int
     verification: dict       # {conforme: bool, motifs: list[str]}
+
+
+class EntretienState(TypedDict):
+    candidature_id: int
+    poste: str
+    entreprise_nom: str
+    secteur: str
+    resume_offre: str
+    stack_technique: str
+    notes: str                # contexte libre saisi par le candidat (champ "Notes et entretiens")
+    analyse: dict              # output Analyste
+    prep_entretien: str        # output Coach (pitch + hard/soft skills + transposition)

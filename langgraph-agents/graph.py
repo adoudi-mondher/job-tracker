@@ -1,9 +1,10 @@
 from langgraph.graph import StateGraph, END
 
 from nodes.analyste import analyste_node
+from nodes.coach import coach_node
 from nodes.redacteur import redacteur_node
 from nodes.verificateur import verificateur_node
-from state import LMState
+from state import EntretienState, LMState
 
 _MAX_ITERATIONS = 2
 
@@ -36,3 +37,19 @@ def build_graph():
 
 
 lm_graph = build_graph()
+
+
+def build_graph_entretien():
+    graph = StateGraph(EntretienState)
+
+    graph.add_node("analyste", analyste_node)
+    graph.add_node("coach", coach_node)
+
+    graph.set_entry_point("analyste")
+    graph.add_edge("analyste", "coach")
+    graph.add_edge("coach", END)
+
+    return graph.compile()
+
+
+entretien_graph = build_graph_entretien()

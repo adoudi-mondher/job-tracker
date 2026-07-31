@@ -109,7 +109,8 @@ def patch_candidature(id):
     """
     Mise a jour partielle par n8n — enrichissement W2 et lettre W3.
     Champs acceptes :
-      poste, stack_technique, resume_offre, lettre_motivation, notes,
+      poste, stack_technique, resume_offre, lettre_motivation,
+      message_accompagnement, prep_entretien, notes,
       statut, lien_offre, source
     Les champs absents du payload ne sont pas modifies.
     """
@@ -118,7 +119,8 @@ def patch_candidature(id):
 
     PATCHABLE = [
         "poste", "stack_technique", "resume_offre",
-        "lettre_motivation", "message_accompagnement", "notes", "statut", "lien_offre", "source",
+        "lettre_motivation", "message_accompagnement", "prep_entretien",
+        "notes", "statut", "lien_offre", "source",
     ]
     for field in PATCHABLE:
         if field in data:

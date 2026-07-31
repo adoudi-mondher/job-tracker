@@ -12,6 +12,7 @@ class Config:
 
     # ── LangGraph multi-agent LM service ─────────────────────────────────────
     LM_AGENT_URL = os.environ.get('LM_AGENT_URL', '')
+    INTERVIEW_PREP_AGENT_URL = os.environ.get('INTERVIEW_PREP_AGENT_URL', '')
 
     # ── France Travail API (W1 — scraping alternance) ─────────────────────────
     FT_CLIENT_ID = os.environ.get('FT_CLIENT_ID', '')

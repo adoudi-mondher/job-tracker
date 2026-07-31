@@ -187,6 +187,32 @@ def changer_statut(id):
     )
 
 
+# ── Préparation entretien ───────────────────────────────────────────────────────
+
+
+@candidatures_bp.route("/<int:id>/preparer-entretien", methods=["POST"])
+@login_required
+def preparer_entretien(id):
+    """Déclenche la génération d'une préparation d'entretien via le Rédacteur LangGraph."""
+    candidature = Candidature.query.get_or_404(id)
+
+    send_webhook(
+        current_app.config["INTERVIEW_PREP_AGENT_URL"],
+        {
+            "candidature_id": candidature.id,
+            "poste": candidature.poste,
+            "entreprise_nom": candidature.entreprise.nom,
+            "secteur": candidature.entreprise.secteur or "",
+            "resume_offre": candidature.resume_offre or "",
+            "stack_technique": candidature.stack_technique or "",
+            "notes": candidature.notes or "",
+        },
+    )
+
+    flash("Préparation d'entretien en cours de génération…", "success")
+    return redirect(url_for("candidatures.detail", id=candidature.id))
+
+
 # ── Archivage ─────────────────────────────────────────────────────────────────
 
 

@@ -91,8 +91,8 @@ Tracker{% endblock %} {% block content %}
             <dt>Lettre de motivation</dt>
             <dd>{{ candidature.lm_fichier }}</dd>
             {% endif %} {% if candidature.notes %}
-            <dt>Notes</dt>
-            <dd>{{ candidature.notes }}</dd>
+            <dt>Notes et entretiens</dt>
+            <dd style="white-space:pre-line;">{{ candidature.notes }}</dd>
             {% endif %}
         </dl>
     </div>
@@ -207,6 +207,54 @@ Tracker{% endblock %} {% block content %}
             </div>
         </form>
     </div>
+</section>
+{% endif %}
+
+<!-- Préparation entretien -->
+{% if not candidature.is_archived or candidature.prep_entretien %}
+<section class="section">
+    <div class="section-header">
+        <h2>🎤 Préparation entretien</h2>
+        {% if not candidature.is_archived %}
+        <form method="POST" action="{{ url_for('candidatures.preparer_entretien', id=candidature.id) }}">
+            <button type="submit" class="btn btn-primary btn-sm">
+                {% if candidature.prep_entretien %}🔄 Régénérer{% else %}✨ Préparer l'entretien{% endif %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    {% if candidature.prep_entretien %}
+    <div class="card">
+        <form method="POST" action="{{ url_for('candidatures.modifier', id=candidature.id) }}">
+            <input type="hidden" name="entreprise_id" value="{{ candidature.entreprise_id }}">
+            <input type="hidden" name="poste" value="{{ candidature.poste }}">
+            <input type="hidden" name="type_contrat" value="{{ candidature.type_contrat }}">
+            <input type="hidden" name="date_envoi" value="{{ candidature.date_envoi.isoformat() }}">
+            <input type="hidden" name="statut" value="{{ candidature.statut }}">
+            <input type="hidden" name="lien_offre" value="{{ candidature.lien_offre or '' }}">
+            <input type="hidden" name="lm_fichier" value="{{ candidature.lm_fichier or '' }}">
+            <input type="hidden" name="notes" value="{{ candidature.notes or '' }}">
+            <input type="hidden" name="resume_offre" value="{{ candidature.resume_offre or '' }}">
+            <input type="hidden" name="lettre_motivation" value="{{ candidature.lettre_motivation or '' }}">
+            <input type="hidden" name="message_accompagnement" value="{{ candidature.message_accompagnement or '' }}">
+            <textarea id="prep-entretien-{{ candidature.id }}" name="prep_entretien" rows="16"
+                {% if candidature.is_archived %}readonly{% endif %}
+                style="width:100%;font-family:Georgia,serif;font-size:0.9rem;line-height:1.6;border:1px solid #e5e7eb;border-radius:6px;padding:0.75rem;resize:vertical;white-space:pre-line;">{{ candidature.prep_entretien }}</textarea>
+            <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                {% if not candidature.is_archived %}
+                <button type="submit" class="btn btn-primary btn-sm">💾 Sauvegarder</button>
+                {% endif %}
+                <button type="button" class="btn btn-secondary btn-sm"
+                    onclick="copyMsgAcc('prep-entretien-{{ candidature.id }}', this)">📋 Copier</button>
+                <small style="color:#6b7280;margin-left:0.25rem;">Pitch, hard/soft skills et transposition stack — basé sur l'offre et le champ Notes</small>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <p class="empty-state" style="font-size:0.9rem;color:#6b7280;">
+        Aucune préparation générée. Ajoute du contexte dans <strong>Notes et entretiens</strong> (type d'entretien, interlocuteurs, points à préparer) puis clique sur <strong>Préparer l'entretien</strong>.
+    </p>
+    {% endif %}
 </section>
 {% endif %}
 
