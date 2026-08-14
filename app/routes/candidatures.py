@@ -454,8 +454,6 @@ def export_lm_pdf(id):
     # Objet — aligné à gauche, gras
     pdf.set_font("Helvetica", "B", 10)
     pdf.cell(0, 6, clean(f"Objet : Candidature - {candidature.poste}"), **NL)
-    pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, "MSc D\xe9veloppement Informatique / IA Epitech", **NL)
     pdf.ln(6)
 
     # Corps — nettoyage robuste du header que Claude inclut parfois
