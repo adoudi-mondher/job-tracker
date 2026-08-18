@@ -88,9 +88,6 @@ def dashboard():
     entretiens = sum(1 for c in toutes if c.statut == "Entretien")
     refus = sum(1 for c in toutes if c.statut == "Refus")
 
-    # Relances dues (actives uniquement)
-    relances_dues = [c for c in toutes if c.relance_due]
-
     # 5 dernières interactions (toutes campagnes confondues)
     interactions_recentes = (
         Interaction.query.order_by(Interaction.date.desc()).limit(5).all()
@@ -111,6 +108,12 @@ def dashboard():
     donut_labels = statuts_ordre
     donut_data = [statuts_count.get(s, 0) for s in statuts_ordre]
     donut_colors = ["#adb5bd", "#3b5bdb", "#f59f00", "#2f9e44", "#e03131", "#868e96"]
+
+    # Taux de conversion (candidatures effectivement envoyées, hors "À envoyer")
+    total_envoyees = total - statuts_count.get("À envoyer", 0)
+    avec_reponse = statuts_count.get("Entretien", 0) + statuts_count.get("Refus", 0)
+    taux_reponse = (avec_reponse / total_envoyees * 100) if total_envoyees else 0
+    taux_entretien = (statuts_count.get("Entretien", 0) / total_envoyees * 100) if total_envoyees else 0
 
     # Bar : candidatures actives par semaine (8 dernières semaines)
     aujourd_hui = datetime.utcnow().date()
@@ -133,7 +136,8 @@ def dashboard():
         envoyees=envoyees,
         entretiens=entretiens,
         refus=refus,
-        relances_dues=relances_dues,
+        taux_reponse=taux_reponse,
+        taux_entretien=taux_entretien,
         interactions_recentes=interactions_recentes,
         donut_labels=donut_labels,
         donut_data=donut_data,

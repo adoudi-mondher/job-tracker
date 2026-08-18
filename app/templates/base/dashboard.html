@@ -27,34 +27,17 @@
     </div>
 </div>
 
-<!-- Relances dues -->
-{% if relances_dues %}
-<section class="section">
-    <h2>⚠️ Relances à faire ({{ relances_dues|length }})</h2>
-    <div class="table-wrapper"><table>
-        <thead>
-            <tr>
-                <th>Entreprise</th>
-                <th>Poste</th>
-                <th>Envoyée le</th>
-                <th>Jours</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for c in relances_dues %}
-            <tr>
-                <td data-label="Entreprise"><strong>{{ c.entreprise.nom }}</strong></td>
-                <td data-label="Poste">{{ c.poste }}</td>
-                <td data-label="Envoyée le">{{ c.date_envoi.strftime('%d/%m/%Y') }}</td>
-                <td data-label="Jours"><span class="badge badge-warning">J+{{ c.jours_depuis_envoi }}</span></td>
-                <td><a href="{{ url_for('candidatures.detail', id=c.id) }}" class="btn btn-sm">Voir</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table></div>
-</section>
-{% endif %}
+<!-- Taux de conversion -->
+<div class="stats-grid">
+    <div class="stat-card stat-blue">
+        <span class="stat-number">{{ "%.0f"|format(taux_reponse) }}%</span>
+        <span class="stat-label">Candidatures avec réponse</span>
+    </div>
+    <div class="stat-card stat-green">
+        <span class="stat-number">{{ "%.0f"|format(taux_entretien) }}%</span>
+        <span class="stat-label">Taux d'entretien</span>
+    </div>
+</div>
 
 <!-- Dernières interactions -->
 {% if interactions_recentes %}
