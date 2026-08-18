@@ -4,10 +4,12 @@ import re
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from nodes.llm_tracking import track_llm_call
 from nodes.utils import extract_text
 from state import LMState
 
-_llm = ChatAnthropic(model="claude-haiku-4-5", max_tokens=512)
+_MODEL = "claude-haiku-4-5"
+_llm = ChatAnthropic(model=_MODEL, max_tokens=512)
 
 _PHRASES_INTERDITES = [
     "C'est avec grand intérêt",
@@ -71,6 +73,7 @@ Si la lettre est directe, factuelle et sobre — même imparfaite stylistiquemen
 En cas de doute, réponds {"ok": true}."""),
             HumanMessage(content=f"Lettre à vérifier :\n\n{lm}"),
         ])
+        track_llm_call(state["candidature_id"], "verificateur", _MODEL, response)
 
         raw = extract_text(response).strip()
         if raw.startswith("```"):

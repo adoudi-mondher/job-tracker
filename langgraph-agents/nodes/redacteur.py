@@ -4,9 +4,11 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
+from nodes.llm_tracking import track_llm_call
 from state import LMState
 
-_llm_base = ChatAnthropic(model="claude-sonnet-5", max_tokens=4096, thinking={"type": "disabled"})
+_MODEL = "claude-sonnet-5"
+_llm_base = ChatAnthropic(model=_MODEL, max_tokens=4096, thinking={"type": "disabled"})
 
 
 class LMOutput(BaseModel):
@@ -14,7 +16,7 @@ class LMOutput(BaseModel):
     message_email: str = Field(description="Corps du message d'accompagnement (60 à 100 mots)")
 
 
-_llm = _llm_base.with_structured_output(LMOutput)
+_llm = _llm_base.with_structured_output(LMOutput, include_raw=True)
 
 _REGLES = (Path(__file__).parent.parent / "regles_redaction.md").read_text(encoding="utf-8")
 
@@ -77,10 +79,14 @@ Contexte complémentaire :
             prompt += f"- {m}\n"
         prompt += "\nRéécris la LM en corrigeant TOUS ces points. Le message_email peut rester identique si non concerné."
 
-    parsed: LMOutput = _llm.invoke([
+    result = _llm.invoke([
         SystemMessage(content=_SYSTEM),
         HumanMessage(content=prompt),
     ])
+    if result["parsing_error"] is not None:
+        raise result["parsing_error"]
+    parsed: LMOutput = result["parsed"]
+    track_llm_call(state["candidature_id"], "redacteur", _MODEL, result["raw"])
 
     return {
         "lm_courante": parsed.lm.strip(),
