@@ -1,5 +1,7 @@
 # Job Tracker 🎯
 
+[![Tests vérificateur](https://github.com/adoudi-mondher/job-tracker/actions/workflows/tests-verificateur.yml/badge.svg)](https://github.com/adoudi-mondher/job-tracker/actions/workflows/tests-verificateur.yml)
+
 Dashboard de suivi de candidatures en alternance — Flask + PostgreSQL + HTMX, avec pipeline de génération IA via LangGraph.
 
 Développé dans le cadre d'une recherche d'alternance MSc IA.  
@@ -240,12 +242,14 @@ pytest tests/ui/ --headed   # mode visuel, pour debug
 
 ### Vérificateur LangGraph (tests unitaires)
 
-Jeu de test sur `_check_programmatique` (checks déterministes du node vérificateur), extrait dans `langgraph-agents/verification.py` pour être testable indépendamment de LangGraph. Rapide, pas de serveur ni de navigateur requis — à relancer à chaque modification de `regles_redaction.md` ou des prompts des nodes.
+Jeu de test sur `_check_programmatique` (checks déterministes du node vérificateur), extrait dans `langgraph-agents/verification.py` pour être testable indépendamment de LangGraph. Rapide, pas de serveur ni de navigateur requis, zéro dépendance tierce.
 
 ```bash
 cd langgraph-agents
 pytest tests/
 ```
+
+Lancé automatiquement par CI (GitHub Actions) à chaque push/PR sur `main` — voir le badge en haut de ce fichier. **Limite connue :** `regles_redaction.md` est exclu du dépôt public (`.gitignore`), donc une modification de ce fichier seul ne déclenche jamais la CI ; seuls les changements de code (`nodes/*.py`, `verification.py`) le font. Après une édition de `regles_redaction.md`, relancer `pytest tests/` manuellement avant le SCP vers le VPS.
 
 ---
 
