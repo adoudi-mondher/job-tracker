@@ -24,10 +24,10 @@ Fork-friendly : clone, configure, lance.
 ## Fonctionnalités
 
 ### Suivi des candidatures
-- Dashboard avec stats en temps réel (répartition par statut, candidatures par semaine)
+- Dashboard avec stats en temps réel (répartition par statut, candidatures par semaine, taux de conversion/entretien)
 - Suivi complet : entreprises, candidatures, interactions chronologiques
 - Changement de statut en un clic sans rechargement (HTMX)
-- Alertes relances automatiques à J+7
+- Alertes relances automatiques à J+7 (badge sur la liste des candidatures)
 - Archivage en masse pour clôturer une campagne et en démarrer une nouvelle
 - Export CSV (candidatures actives ou archivées)
 
@@ -42,11 +42,19 @@ Pipeline multi-agents déclenché automatiquement à la création ou au changeme
 
 | Agent | Modèle | Rôle |
 |-------|--------|------|
-| **Analyste** | claude-haiku-4-5 | Extrait poste, secteur, stack et mots-clés depuis le texte de l'offre |
-| **Rédacteur** | claude-sonnet-5 | Génère la LM en appliquant les règles de style et contextualisation sectorielle |
+| **Analyste** | claude-haiku-4-5 | Extrait poste, secteur, stack, type de contrat et mots-clés depuis le texte de l'offre |
+| **Rédacteur** | claude-sonnet-5 | Génère la LM et le message d'accompagnement (email) en appliquant les règles de style et la contextualisation sectorielle |
 | **Vérificateur** | claude-haiku-4-5 | Contrôle programmatique + LLM (interdits, longueur, ton, honnêteté des gaps) |
 
-Boucle de correction automatique (max 2 itérations) si le Vérificateur rejette. Résultat écrit directement dans la candidature via l'API REST. Chaque run est loggué dans `lm_generation_runs` (PostgreSQL).
+Boucle de correction automatique (max 2 itérations) si le Vérificateur rejette. Résultat écrit directement dans la candidature via l'API REST. Chaque run est loggué dans `lm_generation_runs`, chaque appel LLM (tokens + coût) dans `llm_calls` — voir [Évaluation du pipeline](#évaluation-du-pipeline-evals).
+
+### Préparation entretien (LangGraph)
+
+Deuxième pipeline (Analyste → Coach, claude-sonnet-5), déclenché manuellement depuis la fiche candidature. Génère pitch, hard skills, soft skills et transposition de stack à partir de l'offre et du profil candidat — pour préparer un entretien précis, pas une fiche générique.
+
+### Évaluation du pipeline (evals)
+
+Page `/evals` : coût cumulé / 7 derniers jours / aujourd'hui et par node LLM (tokens inclus), taux de conformité du Vérificateur (total + au premier coup), top motifs de rejet, et signal humain — LM marquées "conforme" par le Vérificateur mais quand même corrigées manuellement après coup (faux négatif potentiel à investiguer). Démarche complète et roadmap : [`docs/roadmap-evals.md`](docs/roadmap-evals.md).
 
 ---
 
@@ -103,9 +111,11 @@ LM_AGENT_URL=http://langgraph-agents:8001/generate-lm
 
 ```
 job-tracker/
+├── .github/workflows/
+│   └── tests-verificateur.yml # CI — tests du vérificateur sur push/PR vers main
 ├── app/
 │   ├── __init__.py           # Factory Flask + enregistrement blueprints
-│   ├── models.py             # Entreprise / Candidature / Interaction
+│   ├── models.py             # Entreprise / Candidature / Interaction + LlmCall / LmGenerationRun (lecture seule)
 │   ├── webhooks.py           # Fire-and-forget webhooks sortants
 │   ├── routes/
 │   │   ├── main.py           # Dashboard + authentification
@@ -113,19 +123,26 @@ job-tracker/
 │   │   ├── candidatures.py   # CRUD candidatures + HTMX statut + archivage
 │   │   ├── interactions.py   # Historique interactions
 │   │   ├── offres.py         # Pages Découvrir (LBA) + France Travail
+│   │   ├── evals.py          # Page /evals — coût LLM, conformité, signal humain
 │   │   └── api.py            # API REST (LangGraph write-back)
 │   ├── templates/
 │   └── static/
 ├── langgraph-agents/
-│   ├── main.py               # FastAPI — POST /generate-lm
-│   ├── graph.py              # StateGraph LangGraph
-│   ├── state.py              # LMState TypedDict
+│   ├── main.py               # FastAPI — POST /generate-lm, POST /generate-interview-prep
+│   ├── graph.py               # StateGraph LangGraph (lm_graph, entretien_graph)
+│   ├── state.py               # LMState / EntretienState TypedDict
+│   ├── verification.py       # check_programmatique — testable indépendamment de LangGraph
 │   ├── nodes/
 │   │   ├── analyste.py       # Extraction structurée de l'offre
-│   │   ├── redacteur.py      # Génération LM
-│   │   └── verificateur.py   # Contrôle qualité + boucle correction
-│   ├── db.py                 # Logging PostgreSQL lm_generation_runs
-│   ├── regles_redaction.md   # Profil candidat + règles de style
+│   │   ├── redacteur.py      # Génération LM + message d'accompagnement
+│   │   ├── verificateur.py   # Contrôle qualité + boucle correction
+│   │   ├── coach.py          # Préparation entretien (pitch, hard/soft skills, transposition)
+│   │   └── llm_tracking.py   # Log coût/tokens de chaque appel LLM (llm_calls)
+│   ├── tests/
+│   │   └── test_verification.py  # 21 cas de régression sur check_programmatique
+│   ├── pytest.ini
+│   ├── db.py                 # Logging PostgreSQL lm_generation_runs + llm_calls
+│   ├── regles_redaction.md   # Profil candidat + règles de style (exclu du repo public)
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── tests/
@@ -150,23 +167,39 @@ job-tracker/
 ## Modèle de données
 
 ```
-Entreprise          Candidature                    Interaction
-──────────          ───────────                    ───────────
-id             ←─── entreprise_id            ←─── candidature_id
-nom                 poste                          date
-secteur             type_contrat                   type_interaction
-localisation        date_envoi                     notes
+Entreprise          Candidature                              Interaction
+──────────          ───────────                              ───────────
+id             ←─── entreprise_id                       ←─── candidature_id
+nom                 poste                                    date
+secteur             type_contrat                             type_interaction
+localisation        date_envoi                               notes
 site_web            statut
 contact_nom         lien_offre
 contact_email       date_relance
-notes               source                 ← "manual" | "lba"
-                    resume_offre           ← texte complet de l'offre (saisi)
-                    stack_technique        ← extrait par l'Analyste LangGraph
-                    lettre_motivation      ← généré par le Rédacteur LangGraph
-                    archived_at            ← soft delete
+notes               source                        ← "manual" | "lba"
+                    resume_offre                  ← texte complet de l'offre (saisi)
+                    stack_technique                ← extrait par l'Analyste LangGraph
+                    lettre_motivation              ← version finale (éditable) — Rédacteur LangGraph
+                    lettre_motivation_generee      ← snapshot figé de la version générée (signal humain, evals)
+                    message_accompagnement         ← email d'accompagnement — Rédacteur LangGraph
+                    prep_entretien                 ← pitch/hard-soft skills — Coach LangGraph
+                    archived_at                    ← soft delete
 ```
 
 **Statuts :** `À envoyer` → `Envoyée` → `Relance` → `Entretien` → `Refus` → `Abandonné`
+
+**Tables evals** (créées et écrites par `langgraph-agents/db.py`, lues en lecture seule côté Flask via `LlmCall`/`LmGenerationRun` — voir `/evals`) :
+
+```
+llm_calls                        lm_generation_runs
+─────────                        ──────────────────
+candidature_id                   candidature_id
+node          ← analyste/redacteur/verificateur/coach
+model                            statut_verification  ← conforme/non_conforme/max_iterations
+input_tokens                     motifs_json
+output_tokens                    nb_iterations
+cost_usd                         analyse_json
+```
 
 ---
 
