@@ -113,7 +113,15 @@ def dashboard():
     total_envoyees = total - statuts_count.get("À envoyer", 0)
     avec_reponse = statuts_count.get("Entretien", 0) + statuts_count.get("Refus", 0)
     taux_reponse = (avec_reponse / total_envoyees * 100) if total_envoyees else 0
-    taux_entretien = (statuts_count.get("Entretien", 0) / total_envoyees * 100) if total_envoyees else 0
+
+    # Taux d'entretien : basé sur l'historique des interactions (survit à un passage
+    # ultérieur en "Refus"), pas sur le statut courant — même logique que /rapport
+    ids_avec_entretien = {
+        i.candidature_id
+        for i in Interaction.query.filter_by(type_interaction="Entretien").all()
+    }
+    nb_avec_entretien = sum(1 for c in toutes if c.id in ids_avec_entretien)
+    taux_entretien = (nb_avec_entretien / total_envoyees * 100) if total_envoyees else 0
 
     # Bar : candidatures actives par semaine (8 dernières semaines)
     aujourd_hui = datetime.utcnow().date()
