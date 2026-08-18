@@ -26,10 +26,6 @@ sont alimentées par le service <code>langgraph-agents</code> (voir <code>docs/r
         <span class="stat-label">Aujourd'hui</span>
     </div>
     <div class="stat-card">
-        <span class="stat-number">{{ nb_appels }}</span>
-        <span class="stat-label">Appels LLM</span>
-    </div>
-    <div class="stat-card">
         <span class="stat-number">${{ "%.4f"|format(cout_moyen_candidature) }}</span>
         <span class="stat-label">Coût moyen par candidature</span>
     </div>
@@ -40,6 +36,10 @@ sont alimentées par le service <code>langgraph-agents</code> (voir <code>docs/r
     <div class="stat-card">
         <span class="stat-number">{{ nb_runs }}</span>
         <span class="stat-label">LM générées</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ nb_appels }}</span>
+        <span class="stat-label">Appels LLM (cumulé)</span>
     </div>
     <div class="stat-card stat-green">
         <span class="stat-number">{{ "%.0f"|format(taux_conforme) }}%</span>
