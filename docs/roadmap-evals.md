@@ -91,3 +91,9 @@ Recherche déjà faite le 2026-07-31, reprise ici (anciennement dans `todo-list.
   ```bash
   docker compose exec job-tracker-db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ALTER TABLE candidature ADD COLUMN IF NOT EXISTS lettre_motivation_generee TEXT;"'
   ```
+  Migration exécutée et vérifiée le même jour (`\d candidature` sur le VPS).
+- **2026-08-18 (test réel — bug trouvé)** — Test de bout en bout demandé par l'utilisateur : régénération d'une vraie LM en prod (candidature Olky #204, statut Abandonné → À envoyer via navigateur piloté). Génération confirmée (nouveau texte). Mais `/evals` affichait "7 derniers jours" et "Aujourd'hui" à $0.0000 alors que "Coût cumulé" ($0.0268) était correct. **Cause :** `LlmCall.created_at`/`LmGenerationRun.created_at` dans `app/models.py` utilisaient `default=datetime.utcnow` (Python-side, appliqué seulement par l'ORM Flask) au lieu de `server_default=` (DDL). `llm_calls` étant une table neuve créée cette session, si `db.create_all()` (Flask) l'a créée avant `ensure_table()` (langgraph-agents), la colonne s'est retrouvée sans défaut SQL — les INSERT bruts de `db.py::log_llm_call()` (qui ne précisent jamais `created_at`, comptant sur `DEFAULT NOW()`) ont alors écrit `NULL`. `lm_generation_runs` n'a pas ce problème car la table existait déjà avant cette session (créée à l'origine par langgraph-agents seul). **Fix :** `server_default=db.func.now()` sur les deux modèles (portable sqlite/postgres, vérifié en local). **Reste à exécuter sur le VPS** (table déjà créée, le fix du modèle ne s'applique pas rétroactivement) :
+  ```bash
+  docker compose exec job-tracker-db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ALTER TABLE llm_calls ALTER COLUMN created_at SET DEFAULT NOW();"'
+  docker compose exec job-tracker-db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "UPDATE llm_calls SET created_at = NOW() WHERE created_at IS NULL;"'
+  ```
