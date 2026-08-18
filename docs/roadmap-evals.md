@@ -75,8 +75,8 @@ Recherche déjà faite le 2026-07-31, reprise ici (anciennement dans `todo-list.
   - [x] % conforme au premier coup (sans itération) — et taux conforme global
   - [x] Coût cumulé / 7 jours / jour, ventilé par node (tokens input/output inclus)
   - [x] Top motifs de rejet du vérificateur
-  - [ ] Coût moyen par candidature (actuellement : cumul par node, pas de moyenne par candidature)
-  - [ ] Évolution dans le temps (dérive après modification d'un prompt) — pas de vue temporelle pour l'instant, seulement cumul/7j/jour
+  - [x] Coût moyen par candidature — `cout_total / nb candidatures distinctes ayant au moins un appel LLM`
+  - [ ] Évolution dans le temps (dérive après modification d'un prompt) — **volontairement pas fait** : ~60 runs sur 3 semaines, un graphe hebdomadaire serait trop bruité pour être lisible. À reconsidérer quand le volume augmente, pas une priorité tant que ce n'est pas le cas.
 
 ---
 
@@ -97,3 +97,5 @@ Recherche déjà faite le 2026-07-31, reprise ici (anciennement dans `todo-list.
   docker compose exec job-tracker-db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ALTER TABLE llm_calls ALTER COLUMN created_at SET DEFAULT NOW();"'
   docker compose exec job-tracker-db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "UPDATE llm_calls SET created_at = NOW() WHERE created_at IS NULL;"'
   ```
+  Migration exécutée, corrigé vérifié en direct sur le navigateur (coût jour/semaine cohérents) + signal humain Phase 3 confirmé fonctionnel sur ce même test.
+- **2026-08-18 (nettoyage `/evals`)** — Deux retouches suite à relecture de la page en conditions réelles : (1) le libellé "Corrigées par l'humain malgré tout" en `%` était ambigu sur un petit échantillon (100% de 1 cas) — remplacé par une fraction explicite `nb/nb`. (2) La section "Générations récentes" (table brute date/candidature/statut/itérations) a été retirée — ce n'est pas une métrique, juste un log, contrairement à "Faux négatifs potentiels" qui est un vrai signal actionnable. Remplacée par "Coût moyen par candidature" (item Phase 4 encore non coché, calcul trivial).
