@@ -159,7 +159,10 @@ class LlmCall(db.Model):
     input_tokens = db.Column(db.Integer)
     output_tokens = db.Column(db.Integer)
     cost_usd = db.Column(db.Numeric(10, 6))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # server_default aligné sur le DDL langgraph-agents/db.py (DEFAULT NOW()) : si Flask
+    # crée cette table le premier (db.create_all() au démarrage, race avec ensure_table()),
+    # la colonne doit quand même être peuplée automatiquement à l'insert brut côté langgraph-agents.
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
 
 
 class LmGenerationRun(db.Model):
@@ -174,7 +177,7 @@ class LmGenerationRun(db.Model):
     statut_verification = db.Column(db.String(20))
     motifs_json = db.Column(db.JSON)
     nb_iterations = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
 
 
 class Interaction(db.Model):
