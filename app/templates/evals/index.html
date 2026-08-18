@@ -55,8 +55,8 @@ sont alimentées par le service <code>langgraph-agents</code> (voir <code>docs/r
         <span class="stat-label">LM conformes avec snapshot</span>
     </div>
     <div class="stat-card{% if faux_negatifs %} stat-red{% endif %}">
-        <span class="stat-number">{{ "%.0f"|format(taux_faux_negatif) }}%</span>
-        <span class="stat-label">Corrigées par l'humain malgré tout</span>
+        <span class="stat-number">{{ nb_faux_negatifs }}/{{ nb_candidatures_avec_snapshot }}</span>
+        <span class="stat-label">Corrigées malgré un verdict "conforme"</span>
     </div>
 </div>
 

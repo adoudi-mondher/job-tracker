@@ -70,9 +70,6 @@ def index():
     )
     candidatures_avec_snapshot = [c for c in candidatures_conformes if c.lettre_motivation_generee]
     faux_negatifs = [c for c in candidatures_avec_snapshot if c.lm_editee_manuellement]
-    taux_faux_negatif = (
-        len(faux_negatifs) / len(candidatures_avec_snapshot) * 100
-    ) if candidatures_avec_snapshot else 0
 
     return render_template(
         "evals/index.html",
@@ -88,6 +85,6 @@ def index():
         top_motifs=top_motifs,
         runs_recents=runs[:10],
         nb_candidatures_avec_snapshot=len(candidatures_avec_snapshot),
-        taux_faux_negatif=taux_faux_negatif,
+        nb_faux_negatifs=len(faux_negatifs),
         faux_negatifs=faux_negatifs,
     )
