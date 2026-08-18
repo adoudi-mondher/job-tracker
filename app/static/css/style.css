@@ -275,6 +275,7 @@ td.notes-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; whi
     white-space: nowrap;
 }
 .badge-warning    { background: #fff3cd; color: #7c5e0a; }
+.badge-success    { background: #d3f9d8; color: #1b4332; }
 .badge-à-envoyer  { background: #e8eaf0; color: #3b3f5c; }
 .badge-envoyée    { background: #dbe4ff; color: #1e3a8a; }
 .badge-relance    { background: #fff3cd; color: #7c5e0a; }

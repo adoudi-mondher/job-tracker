@@ -22,6 +22,7 @@ def create_app(config_class=Config):
     from app.routes.interactions import interactions_bp
     from app.routes.api import api_bp
     from app.routes.offres import offres_bp
+    from app.routes.evals import evals_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(entreprises_bp, url_prefix='/entreprises')
@@ -29,5 +30,6 @@ def create_app(config_class=Config):
     app.register_blueprint(interactions_bp, url_prefix='/interactions')
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(offres_bp, url_prefix='/offres')
+    app.register_blueprint(evals_bp, url_prefix='/evals')
 
     return app

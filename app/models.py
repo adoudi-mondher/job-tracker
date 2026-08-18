@@ -134,6 +134,36 @@ class Candidature(db.Model):
         }
 
 
+class LlmCall(db.Model):
+    """Table gérée par langgraph-agents/db.py (ensure_table) — lecture seule côté Flask."""
+
+    __tablename__ = "llm_calls"
+
+    id = db.Column(db.Integer, primary_key=True)
+    candidature_id = db.Column(db.Integer)
+    node = db.Column(db.String(50))
+    model = db.Column(db.String(50))
+    input_tokens = db.Column(db.Integer)
+    output_tokens = db.Column(db.Integer)
+    cost_usd = db.Column(db.Numeric(10, 6))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class LmGenerationRun(db.Model):
+    """Table gérée par langgraph-agents/db.py (ensure_table) — lecture seule côté Flask."""
+
+    __tablename__ = "lm_generation_runs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    candidature_id = db.Column(db.Integer, nullable=False)
+    analyse_json = db.Column(db.JSON)
+    lm_finale = db.Column(db.Text)
+    statut_verification = db.Column(db.String(20))
+    motifs_json = db.Column(db.JSON)
+    nb_iterations = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class Interaction(db.Model):
     __tablename__ = "interaction"
 

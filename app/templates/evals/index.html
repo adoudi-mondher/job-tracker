@@ -1,0 +1,128 @@
+{% extends "base/layout.html" %}
+{% block title %}Evals — Job Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Evals</h1>
+</div>
+
+{% if nb_appels == 0 and nb_runs == 0 %}
+<p>Aucune donnée pour l'instant — les tables <code>llm_calls</code> et <code>lm_generation_runs</code>
+sont alimentées par le service <code>langgraph-agents</code> (voir <code>docs/roadmap-evals.md</code>).</p>
+{% else %}
+
+<!-- Coût -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-number">${{ "%.4f"|format(cout_total) }}</span>
+        <span class="stat-label">Coût cumulé</span>
+    </div>
+    <div class="stat-card stat-blue">
+        <span class="stat-number">${{ "%.4f"|format(cout_semaine) }}</span>
+        <span class="stat-label">7 derniers jours</span>
+    </div>
+    <div class="stat-card stat-blue">
+        <span class="stat-number">${{ "%.4f"|format(cout_jour) }}</span>
+        <span class="stat-label">Aujourd'hui</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ nb_appels }}</span>
+        <span class="stat-label">Appels LLM</span>
+    </div>
+</div>
+
+<!-- Conformité vérificateur -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-number">{{ nb_runs }}</span>
+        <span class="stat-label">LM générées</span>
+    </div>
+    <div class="stat-card stat-green">
+        <span class="stat-number">{{ "%.0f"|format(taux_conforme) }}%</span>
+        <span class="stat-label">Conformes (au total)</span>
+    </div>
+    <div class="stat-card stat-green">
+        <span class="stat-number">{{ "%.0f"|format(taux_premier_coup) }}%</span>
+        <span class="stat-label">Conformes au premier coup</span>
+    </div>
+</div>
+
+<!-- Coût par node -->
+{% if cout_par_node %}
+<section class="section">
+    <h2>Coût par node</h2>
+    <div class="table-wrapper"><table>
+        <thead>
+            <tr>
+                <th>Node</th>
+                <th>Coût</th>
+                <th>Tokens input</th>
+                <th>Tokens output</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for node, cout in cout_par_node %}
+            <tr>
+                <td data-label="Node"><strong>{{ node }}</strong></td>
+                <td data-label="Coût">${{ "%.4f"|format(cout) }}</td>
+                <td data-label="Tokens input">{{ tokens_par_node[node].input }}</td>
+                <td data-label="Tokens output">{{ tokens_par_node[node].output }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table></div>
+</section>
+{% endif %}
+
+<!-- Top motifs de rejet -->
+{% if top_motifs %}
+<section class="section">
+    <h2>Top motifs de rejet (vérificateur)</h2>
+    <div class="table-wrapper"><table>
+        <thead>
+            <tr>
+                <th>Motif</th>
+                <th>Occurrences</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for motif, count in top_motifs %}
+            <tr>
+                <td data-label="Motif">{{ motif }}</td>
+                <td data-label="Occurrences"><span class="badge">{{ count }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table></div>
+</section>
+{% endif %}
+
+<!-- Runs récents -->
+{% if runs_recents %}
+<section class="section">
+    <h2>Générations récentes</h2>
+    <div class="table-wrapper"><table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Candidature</th>
+                <th>Statut</th>
+                <th>Itérations</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in runs_recents %}
+            <tr>
+                <td data-label="Date">{{ r.created_at.strftime('%d/%m %H:%M') if r.created_at else '—' }}</td>
+                <td data-label="Candidature"><a href="{{ url_for('candidatures.detail', id=r.candidature_id) }}">#{{ r.candidature_id }}</a></td>
+                <td data-label="Statut"><span class="badge{% if r.statut_verification == 'conforme' %} badge-success{% else %} badge-warning{% endif %}">{{ r.statut_verification }}</span></td>
+                <td data-label="Itérations">{{ r.nb_iterations }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table></div>
+</section>
+{% endif %}
+
+{% endif %}
+{% endblock %}
