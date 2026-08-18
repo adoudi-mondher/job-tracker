@@ -5,7 +5,7 @@ from flask import Blueprint, render_template
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from app import db
-from app.models import LlmCall, LmGenerationRun
+from app.models import Candidature, LlmCall, LmGenerationRun
 from app.routes.main import login_required
 
 evals_bp = Blueprint("evals", __name__)
@@ -55,6 +55,25 @@ def index():
             motifs_compteur[motif] += 1
     top_motifs = motifs_compteur.most_common(5)
 
+    # Signal humain (Phase 3) : sur le dernier run "conforme" de chaque candidature,
+    # le vérificateur a-t-il quand même été corrigé par l'humain après coup ?
+    # → un faux négatif du vérificateur à investiguer.
+    dernier_run_par_candidature = {}
+    for r in runs:  # runs déjà triés desc par created_at
+        dernier_run_par_candidature.setdefault(r.candidature_id, r)
+
+    ids_conformes = [
+        cid for cid, r in dernier_run_par_candidature.items() if r.statut_verification == "conforme"
+    ]
+    candidatures_conformes = (
+        Candidature.query.filter(Candidature.id.in_(ids_conformes)).all() if ids_conformes else []
+    )
+    candidatures_avec_snapshot = [c for c in candidatures_conformes if c.lettre_motivation_generee]
+    faux_negatifs = [c for c in candidatures_avec_snapshot if c.lm_editee_manuellement]
+    taux_faux_negatif = (
+        len(faux_negatifs) / len(candidatures_avec_snapshot) * 100
+    ) if candidatures_avec_snapshot else 0
+
     return render_template(
         "evals/index.html",
         cout_total=cout_total,
@@ -68,4 +87,7 @@ def index():
         taux_premier_coup=taux_premier_coup,
         top_motifs=top_motifs,
         runs_recents=runs[:10],
+        nb_candidatures_avec_snapshot=len(candidatures_avec_snapshot),
+        taux_faux_negatif=taux_faux_negatif,
+        faux_negatifs=faux_negatifs,
     )

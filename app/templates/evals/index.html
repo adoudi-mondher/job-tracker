@@ -47,6 +47,45 @@ sont alimentées par le service <code>langgraph-agents</code> (voir <code>docs/r
     </div>
 </div>
 
+{% if nb_candidatures_avec_snapshot > 0 %}
+<!-- Signal humain : faux négatifs du vérificateur -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-number">{{ nb_candidatures_avec_snapshot }}</span>
+        <span class="stat-label">LM conformes avec snapshot</span>
+    </div>
+    <div class="stat-card{% if faux_negatifs %} stat-red{% endif %}">
+        <span class="stat-number">{{ "%.0f"|format(taux_faux_negatif) }}%</span>
+        <span class="stat-label">Corrigées par l'humain malgré tout</span>
+    </div>
+</div>
+
+{% if faux_negatifs %}
+<section class="section">
+    <h2>Faux négatifs potentiels du vérificateur</h2>
+    <p>Le vérificateur a dit "conforme" mais la LM finale diffère de la version générée — à investiguer.</p>
+    <div class="table-wrapper"><table>
+        <thead>
+            <tr>
+                <th>Candidature</th>
+                <th>Entreprise</th>
+                <th>Poste</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in faux_negatifs %}
+            <tr>
+                <td data-label="Candidature"><a href="{{ url_for('candidatures.detail', id=c.id) }}">#{{ c.id }}</a></td>
+                <td data-label="Entreprise">{{ c.entreprise.nom }}</td>
+                <td data-label="Poste">{{ c.poste }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table></div>
+</section>
+{% endif %}
+{% endif %}
+
 <!-- Coût par node -->
 {% if cout_par_node %}
 <section class="section">

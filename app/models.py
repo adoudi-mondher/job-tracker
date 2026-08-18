@@ -70,6 +70,10 @@ class Candidature(db.Model):
     resume_offre = db.Column(db.Text, nullable=True)
     # Lettre de motivation W3 (brouillon généré par Claude)
     lettre_motivation = db.Column(db.Text, nullable=True)
+    # Snapshot de la version générée par le Rédacteur — figée à l'écriture du PATCH
+    # de génération (voir api.py::patch_candidature), jamais touchée par une édition
+    # manuelle. Sert de référence pour détecter si l'humain a corrigé la LM après coup.
+    lettre_motivation_generee = db.Column(db.Text, nullable=True)
     # Message email d'accompagnement (rédigé manuellement pour envoi direct par email)
     message_accompagnement = db.Column(db.Text, nullable=True)
     # Préparation entretien (pitch, hard/soft skills, transposition stack) générée par le Rédacteur
@@ -101,6 +105,13 @@ class Candidature(db.Model):
             return datetime.utcnow().date() >= self.date_relance
         return False
 
+    @property
+    def lm_editee_manuellement(self):
+        """True si la LM finale diverge de la version générée par le Rédacteur."""
+        if not self.lettre_motivation_generee or not self.lettre_motivation:
+            return False
+        return self.lettre_motivation.strip() != self.lettre_motivation_generee.strip()
+
     def __repr__(self):
         return f"<Candidature {self.poste} @ {self.entreprise_id}>"
 
@@ -129,6 +140,8 @@ class Candidature(db.Model):
             "stack_technique": self.stack_technique,
             "resume_offre": self.resume_offre,
             "lettre_motivation": self.lettre_motivation,
+            "lettre_motivation_generee": self.lettre_motivation_generee,
+            "lm_editee_manuellement": self.lm_editee_manuellement,
             "message_accompagnement": self.message_accompagnement,
             "prep_entretien": self.prep_entretien,
         }

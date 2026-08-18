@@ -127,6 +127,10 @@ def patch_candidature(id):
             if field == "statut" and data[field] not in Candidature.STATUTS:
                 return jsonify({"error": f"Statut invalide : {data[field]}"}), 400
             setattr(candidature, field, data[field])
+            if field == "lettre_motivation":
+                # Snapshot de la version générée — ce endpoint n'est appelé que par le
+                # write-back langgraph-agents, jamais par l'édition manuelle côté UI.
+                candidature.lettre_motivation_generee = data[field]
 
     db.session.commit()
     return jsonify(candidature.to_dict())
