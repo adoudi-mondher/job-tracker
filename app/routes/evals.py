@@ -41,6 +41,9 @@ def index():
         tokens_par_node[a.node]["input"] += a.input_tokens or 0
         tokens_par_node[a.node]["output"] += a.output_tokens or 0
 
+    candidatures_avec_cout = {a.candidature_id for a in appels if a.candidature_id is not None}
+    cout_moyen_candidature = (cout_total / len(candidatures_avec_cout)) if candidatures_avec_cout else 0
+
     nb_runs = len(runs)
     nb_conformes = sum(1 for r in runs if r.statut_verification == "conforme")
     nb_premier_coup = sum(
@@ -76,6 +79,7 @@ def index():
         cout_total=cout_total,
         cout_semaine=cout_semaine,
         cout_jour=cout_jour,
+        cout_moyen_candidature=cout_moyen_candidature,
         nb_appels=len(appels),
         cout_par_node=sorted(cout_par_node.items(), key=lambda x: x[1], reverse=True),
         tokens_par_node=tokens_par_node,
@@ -83,7 +87,6 @@ def index():
         taux_conforme=taux_conforme,
         taux_premier_coup=taux_premier_coup,
         top_motifs=top_motifs,
-        runs_recents=runs[:10],
         nb_candidatures_avec_snapshot=len(candidatures_avec_snapshot),
         nb_faux_negatifs=len(faux_negatifs),
         faux_negatifs=faux_negatifs,
