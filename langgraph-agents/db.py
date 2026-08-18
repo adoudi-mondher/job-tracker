@@ -16,6 +16,19 @@ CREATE TABLE IF NOT EXISTS lm_generation_runs (
 );
 """
 
+_CREATE_TABLE_LLM_CALLS = """
+CREATE TABLE IF NOT EXISTS llm_calls (
+    id SERIAL PRIMARY KEY,
+    candidature_id INTEGER,
+    node VARCHAR(50),
+    model VARCHAR(50),
+    input_tokens INTEGER,
+    output_tokens INTEGER,
+    cost_usd NUMERIC(10,6),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+"""
+
 
 def _is_postgres() -> bool:
     url = os.environ.get("DATABASE_URL", "")
@@ -35,6 +48,7 @@ def ensure_table() -> None:
         with _get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(_CREATE_TABLE)
+                cur.execute(_CREATE_TABLE_LLM_CALLS)
     except Exception as exc:
         logger.warning("ensure_table: impossible de créer la table (%s) — logging DB désactivé", exc)
 
@@ -61,3 +75,26 @@ def log_run(
                 )
     except Exception as exc:
         logger.warning("log_run failed candidature %s: %s", candidature_id, exc)
+
+
+def log_llm_call(
+    candidature_id: int,
+    node: str,
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cost_usd: float,
+) -> None:
+    if not _is_postgres():
+        return
+    try:
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """INSERT INTO llm_calls
+                       (candidature_id, node, model, input_tokens, output_tokens, cost_usd)
+                       VALUES (%s, %s, %s, %s, %s, %s)""",
+                    (candidature_id, node, model, input_tokens, output_tokens, cost_usd),
+                )
+    except Exception as exc:
+        logger.warning("log_llm_call failed candidature %s node %s: %s", candidature_id, node, exc)

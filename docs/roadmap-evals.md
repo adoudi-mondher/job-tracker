@@ -28,8 +28,8 @@ Contexte complet de la démarche : conversation `yt-strategic-watch`, analyse `l
 
 Recherche déjà faite le 2026-07-31, reprise ici (anciennement dans `todo-list.md`).
 
-- [ ] Passer `redacteur.py` et `coach.py` en `with_structured_output(Model, include_raw=True)` (sinon pas d'`AIMessage`, donc pas d'usage disponible) — `analyste.py` et `verificateur.py` n'ont pas ce problème (appel direct)
-- [ ] Créer la table `llm_calls` (un enregistrement par appel LLM, pas par run de graphe) :
+- [x] Passer `redacteur.py` et `coach.py` en `with_structured_output(Model, include_raw=True)` (sinon pas d'`AIMessage`, donc pas d'usage disponible) — `analyste.py` et `verificateur.py` n'ont pas ce problème (appel direct)
+- [x] Créer la table `llm_calls` (un enregistrement par appel LLM, pas par run de graphe) :
   ```sql
   CREATE TABLE llm_calls (
       id SERIAL PRIMARY KEY,
@@ -42,8 +42,8 @@ Recherche déjà faite le 2026-07-31, reprise ici (anciennement dans `todo-list.
       created_at TIMESTAMP DEFAULT NOW()
   );
   ```
-- [ ] Écrire un wrapper d'appel LLM commun (helper qui log automatiquement dans `llm_calls` après chaque `invoke`) pour éviter de dupliquer la logique dans chaque node
-- [ ] Hardcoder le pricing courant (pas d'API de pricing live) :
+- [x] Écrire un wrapper d'appel LLM commun (helper qui log automatiquement dans `llm_calls` après chaque `invoke`) pour éviter de dupliquer la logique dans chaque node
+- [x] Hardcoder le pricing courant (pas d'API de pricing live) :
 
   | Modèle | Input /1M tokens | Output /1M tokens |
   |---|---|---|
@@ -80,3 +80,4 @@ Recherche déjà faite le 2026-07-31, reprise ici (anciennement dans `todo-list.
 ## Journal
 
 - **2026-08-11** — Création du doc. État des lieux fait après lecture de `graph.py`, `state.py`, `main.py`, `db.py`, `nodes/*.py`. Recherche coût du 2026-07-31 (ex-`todo-list.md`) intégrée en Phase 1.
+- **2026-08-18** — Phase 1 : tracing du coût implémenté. `redacteur.py`/`coach.py` passés en `with_structured_output(..., include_raw=True)` (gestion de `parsing_error` ajoutée pour garder le comportement fail-loud d'origine). Table `llm_calls` créée dans `db.py` (`ensure_table()` la crée aussi désormais). Nouveau module `nodes/llm_tracking.py` : helper `track_llm_call()` commun aux 4 nodes, pricing hardcodé avec bascule automatique sur la date de fin du tarif d'intro sonnet-5 (2026-08-31). Reste à faire : widget dashboard (dépense jour/semaine/cumul).

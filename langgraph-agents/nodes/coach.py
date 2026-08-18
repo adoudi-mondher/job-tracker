@@ -4,9 +4,11 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
+from nodes.llm_tracking import track_llm_call
 from state import EntretienState
 
-_llm_base = ChatAnthropic(model="claude-sonnet-5", max_tokens=4096, thinking={"type": "disabled"})
+_MODEL = "claude-sonnet-5"
+_llm_base = ChatAnthropic(model=_MODEL, max_tokens=4096, thinking={"type": "disabled"})
 
 
 class InterviewPrepOutput(BaseModel):
@@ -16,7 +18,7 @@ class InterviewPrepOutput(BaseModel):
     transposition_stack: str = Field(description="Si la stack de l'offre diverge de la stack maîtrisée : explication de la transposition (domaine adjacent maîtrisé → montée en compétence). Si la stack correspond déjà, dire explicitement qu'il n'y a pas d'écart notable.")
 
 
-_llm = _llm_base.with_structured_output(InterviewPrepOutput)
+_llm = _llm_base.with_structured_output(InterviewPrepOutput, include_raw=True)
 
 _REGLES = (Path(__file__).parent.parent / "regles_redaction.md").read_text(encoding="utf-8")
 
@@ -60,10 +62,14 @@ Contexte libre (notes du candidat, à filtrer — ne garder que ce qui concerne 
 {state.get('notes', '') or '(aucun)'}
 """
 
-    parsed: InterviewPrepOutput = _llm.invoke([
+    result = _llm.invoke([
         SystemMessage(content=_SYSTEM),
         HumanMessage(content=prompt),
     ])
+    if result["parsing_error"] is not None:
+        raise result["parsing_error"]
+    parsed: InterviewPrepOutput = result["parsed"]
+    track_llm_call(state["candidature_id"], "coach", _MODEL, result["raw"])
 
     prep = f"""🎯 PITCH
 

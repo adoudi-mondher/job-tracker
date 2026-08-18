@@ -3,10 +3,12 @@ import json
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from nodes.llm_tracking import track_llm_call
 from nodes.utils import extract_text
 from state import LMState
 
-_llm = ChatAnthropic(model="claude-haiku-4-5", max_tokens=1024)
+_MODEL = "claude-haiku-4-5"
+_llm = ChatAnthropic(model=_MODEL, max_tokens=1024)
 
 _SYSTEM = """Tu es un analyste de recrutement. Analyse l'offre d'emploi et extrais les informations clés.
 Retourne UNIQUEMENT un objet JSON valide avec les champs suivants :
@@ -37,6 +39,7 @@ Stack technique mentionnée : {state['stack_technique']}"""
         SystemMessage(content=_SYSTEM),
         HumanMessage(content=contenu),
     ])
+    track_llm_call(state["candidature_id"], "analyste", _MODEL, response)
 
     raw = extract_text(response).strip()
     if raw.startswith("```"):
