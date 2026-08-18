@@ -51,7 +51,7 @@ Recherche déjà faite le 2026-07-31, reprise ici (anciennement dans `todo-list.
   | `claude-haiku-4-5` | $1.00 | $5.00 |
 
   Pas d'API Anthropic pour un solde/crédit en temps réel — au mieux on calcule la dépense cumulée nous-mêmes et on la compare à un budget saisi manuellement.
-- [ ] Petit widget dashboard : dépense du jour / semaine / cumul, éventuellement par candidature sur la page détail
+- [x] Petit widget dashboard : dépense du jour / semaine / cumul, éventuellement par candidature sur la page détail — fait sous forme de page dédiée `/evals` (pas un widget sur `/`, voir Phase 4)
 
 ## Phase 2 — Jeu de test / régression sur le vérificateur
 
@@ -68,16 +68,19 @@ Recherche déjà faite le 2026-07-31, reprise ici (anciennement dans `todo-list.
 
 ## Phase 4 — Rapport d'éval
 
-- [ ] Script `eval_report.py` qui interroge `lm_generation_runs` + `llm_calls` et sort :
-  - % conforme au premier coup (sans itération)
-  - Coût moyen par candidature, ventilé par node
-  - Top motifs de rejet du vérificateur (quels checks échouent le plus souvent)
-  - Évolution dans le temps (dérive après modification d'un prompt)
-- [ ] Décider du format de sortie : markdown généré, ou petite page dans le dashboard Job Tracker
+- [x] Décider du format de sortie : markdown généré, ou petite page dans le dashboard Job Tracker
+  → tranché le 2026-08-18 : page `/evals` dans le dashboard Flask (pas de script séparé)
+- [~] Script `eval_report.py` — en grande partie couvert par `/evals` (`app/routes/evals.py`), pas de script séparé nécessaire :
+  - [x] % conforme au premier coup (sans itération) — et taux conforme global
+  - [x] Coût cumulé / 7 jours / jour, ventilé par node (tokens input/output inclus)
+  - [x] Top motifs de rejet du vérificateur
+  - [ ] Coût moyen par candidature (actuellement : cumul par node, pas de moyenne par candidature)
+  - [ ] Évolution dans le temps (dérive après modification d'un prompt) — pas de vue temporelle pour l'instant, seulement cumul/7j/jour
 
 ---
 
 ## Journal
 
 - **2026-08-11** — Création du doc. État des lieux fait après lecture de `graph.py`, `state.py`, `main.py`, `db.py`, `nodes/*.py`. Recherche coût du 2026-07-31 (ex-`todo-list.md`) intégrée en Phase 1.
-- **2026-08-18** — Phase 1 : tracing du coût implémenté. `redacteur.py`/`coach.py` passés en `with_structured_output(..., include_raw=True)` (gestion de `parsing_error` ajoutée pour garder le comportement fail-loud d'origine). Table `llm_calls` créée dans `db.py` (`ensure_table()` la crée aussi désormais). Nouveau module `nodes/llm_tracking.py` : helper `track_llm_call()` commun aux 4 nodes, pricing hardcodé avec bascule automatique sur la date de fin du tarif d'intro sonnet-5 (2026-08-31). Reste à faire : widget dashboard (dépense jour/semaine/cumul).
+- **2026-08-18** — Phase 1 : tracing du coût implémenté. `redacteur.py`/`coach.py` passés en `with_structured_output(..., include_raw=True)` (gestion de `parsing_error` ajoutée pour garder le comportement fail-loud d'origine). Table `llm_calls` créée dans `db.py` (`ensure_table()` la crée aussi désormais). Nouveau module `nodes/llm_tracking.py` : helper `track_llm_call()` commun aux 4 nodes, pricing hardcodé avec bascule automatique sur la date de fin du tarif d'intro sonnet-5 (2026-08-31).
+- **2026-08-18 (suite)** — Page `/evals` créée côté Flask (`app/routes/evals.py`, `app/templates/evals/index.html`) : modèles SQLAlchemy `LlmCall`/`LmGenerationRun` en lecture seule sur les tables gérées par `langgraph-agents/db.py` (fallback silencieux si absentes — dev local sqlite ou service jamais lancé contre la base). Couvre le widget Phase 1 (coût cumul/7j/jour, coût+tokens par node) et l'essentiel de Phase 4 (taux conforme, taux conforme au premier coup, top motifs de rejet, dernières générations) sans script séparé. À l'occasion, remplacé le bloc "relances à faire" du dashboard principal (`/`) par un widget "taux de conversion" (% candidatures avec réponse, taux d'entretien) — demande explicite de l'utilisateur, plus utilisé.
