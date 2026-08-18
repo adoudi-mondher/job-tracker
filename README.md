@@ -238,6 +238,15 @@ pytest tests/ui/ --headed   # mode visuel, pour debug
 
 **Scénarios couverts :** authentification (login valide/invalide), ajout de candidature, archivage, filtre par statut, navigation menu.
 
+### Vérificateur LangGraph (tests unitaires)
+
+Jeu de test sur `_check_programmatique` (checks déterministes du node vérificateur), extrait dans `langgraph-agents/verification.py` pour être testable indépendamment de LangGraph. Rapide, pas de serveur ni de navigateur requis — à relancer à chaque modification de `regles_redaction.md` ou des prompts des nodes.
+
+```bash
+cd langgraph-agents
+pytest tests/
+```
+
 ---
 
 ## Déploiement
