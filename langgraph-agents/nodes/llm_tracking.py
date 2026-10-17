@@ -15,6 +15,9 @@ _PRICING = {
     "claude-haiku-4-5": [
         (None, 1.00, 5.00),
     ],
+    # Mistral : accès gratuit (plan Experiment), coût réel nul
+    "mistral-large-latest": [(None, 0.0, 0.0)],
+    "mistral-small-latest": [(None, 0.0, 0.0)],
 }
 
 

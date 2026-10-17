@@ -16,5 +16,5 @@ def extract_text(response) -> str:
                 return block.text
     stop_reason = getattr(response, "response_metadata", {}).get("stop_reason")
     raise ValueError(
-        f"Aucun bloc 'text' dans la réponse Claude (stop_reason={stop_reason}) : {content!r}"
+        f"Aucun bloc 'text' dans la réponse LLM (stop_reason={stop_reason}) : {content!r}"
     )

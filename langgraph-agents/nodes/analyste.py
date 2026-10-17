@@ -1,14 +1,14 @@
 import json
 
-from langchain_anthropic import ChatAnthropic
+from langchain_mistralai import ChatMistralAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from nodes.llm_tracking import track_llm_call
 from nodes.utils import extract_text
 from state import LMState
 
-_MODEL = "claude-haiku-4-5"
-_llm = ChatAnthropic(model=_MODEL, max_tokens=1024)
+_MODEL = "mistral-small-latest"
+_llm = ChatMistralAI(model=_MODEL, max_tokens=1024, temperature=0)
 
 _SYSTEM = """Tu es un analyste de recrutement. Analyse l'offre d'emploi et extrais les informations clés.
 Retourne UNIQUEMENT un objet JSON valide avec les champs suivants :

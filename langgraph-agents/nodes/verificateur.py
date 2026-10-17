@@ -1,6 +1,6 @@
 import json
 
-from langchain_anthropic import ChatAnthropic
+from langchain_mistralai import ChatMistralAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from nodes.llm_tracking import track_llm_call
@@ -8,8 +8,8 @@ from nodes.utils import extract_text
 from state import LMState
 from verification import check_programmatique
 
-_MODEL = "claude-haiku-4-5"
-_llm = ChatAnthropic(model=_MODEL, max_tokens=512)
+_MODEL = "mistral-small-latest"
+_llm = ChatMistralAI(model=_MODEL, max_tokens=512, temperature=0)
 
 
 def verificateur_node(state: LMState) -> dict:

@@ -1,14 +1,14 @@
 from pathlib import Path
 
-from langchain_anthropic import ChatAnthropic
+from langchain_mistralai import ChatMistralAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 from nodes.llm_tracking import track_llm_call
 from state import LMState
 
-_MODEL = "claude-sonnet-5"
-_llm_base = ChatAnthropic(model=_MODEL, max_tokens=4096, thinking={"type": "disabled"})
+_MODEL = "mistral-large-latest"
+_llm_base = ChatMistralAI(model=_MODEL, max_tokens=4096)
 
 
 class LMOutput(BaseModel):

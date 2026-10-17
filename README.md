@@ -17,7 +17,7 @@ Fork-friendly : clone, configure, lance.
 | Frontend | Jinja2 + HTMX + Chart.js |
 | Base de données | SQLite (dev) / PostgreSQL (prod) |
 | Déploiement | Gunicorn + Docker + Nginx Proxy Manager |
-| Agents IA | LangGraph + Claude AI (Haiku + Sonnet) |
+| Agents IA | LangGraph + Mistral AI (Small + Large) |
 
 ---
 
@@ -42,15 +42,15 @@ Pipeline multi-agents déclenché automatiquement à la création ou au changeme
 
 | Agent | Modèle | Rôle |
 |-------|--------|------|
-| **Analyste** | claude-haiku-4-5 | Extrait poste, secteur, stack, type de contrat et mots-clés depuis le texte de l'offre |
-| **Rédacteur** | claude-sonnet-5 | Génère la LM et le message d'accompagnement (email) en appliquant les règles de style et la contextualisation sectorielle |
-| **Vérificateur** | claude-haiku-4-5 | Contrôle programmatique + LLM (interdits, longueur, ton, honnêteté des gaps) |
+| **Analyste** | mistral-small-latest | Extrait poste, secteur, stack, type de contrat et mots-clés depuis le texte de l'offre |
+| **Rédacteur** | mistral-large-latest | Génère la LM et le message d'accompagnement (email) en appliquant les règles de style et la contextualisation sectorielle |
+| **Vérificateur** | mistral-small-latest | Contrôle programmatique + LLM (interdits, longueur, ton, honnêteté des gaps) |
 
 Boucle de correction automatique (max 2 itérations) si le Vérificateur rejette. Résultat écrit directement dans la candidature via l'API REST. Chaque run est loggué dans `lm_generation_runs`, chaque appel LLM (tokens + coût) dans `llm_calls` — voir [Évaluation du pipeline](#évaluation-du-pipeline-evals).
 
 ### Préparation entretien (LangGraph)
 
-Deuxième pipeline (Analyste → Coach, claude-sonnet-5), déclenché manuellement depuis la fiche candidature. Génère pitch, hard skills, soft skills et transposition de stack à partir de l'offre et du profil candidat — pour préparer un entretien précis, pas une fiche générique.
+Deuxième pipeline (Analyste → Coach, mistral-large-latest), déclenché manuellement depuis la fiche candidature. Génère pitch, hard skills, soft skills et transposition de stack à partir de l'offre et du profil candidat — pour préparer un entretien précis, pas une fiche générique.
 
 ### Évaluation du pipeline (evals)
 
@@ -101,7 +101,7 @@ FT_CLIENT_ID=PAR_xxx
 FT_CLIENT_SECRET=xxx
 
 # LangGraph — génération LM (optionnel — désactive la génération si absent)
-ANTHROPIC_API_KEY=sk-ant-...
+MISTRAL_API_KEY=...
 LM_AGENT_URL=http://langgraph-agents:8001/generate-lm
 ```
 
