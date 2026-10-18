@@ -35,7 +35,7 @@ CONSIGNES LETTRE DE MOTIVATION :
 - Style direct, factuel, sobre - pas de superlatifs, pas d'emphase
 - INTERDIT : tiret em (—), "C'est avec grand intérêt", "peu de profils"
 - CesedaIA = toujours "en cours", jamais "en production"
-- MSc Epitech = toujours "octobre 2026"
+- MSc Epitech = toujours "février 2027" (rentrée à venir : jamais "actuellement en MSc", écrire "je rejoins en février 2027")
 - Gap technique détecté dans l'offre : le nommer, montrer le domaine adjacent maîtrisé, affirmer la montée en compétence rapide
 - Termine OBLIGATOIREMENT par : "Je suis disponible pour un échange."
 

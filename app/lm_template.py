@@ -15,7 +15,7 @@ STRUCTURE DES PARAGRAPHES (4 max) :
 [§1 – Accroche : lien direct avec l'offre et le projet en cours chez l'entreprise]
 [§2 – Compétences techniques et projets pertinents pour ce poste]
 [§3 – Expérience Siemens et valeur ajoutée terrain]
-[§4 – MSc Epitech oct. 2026, rythme majoritairement en entreprise ; mentionner MOSLTRANS si pertinent]
+[§4 – MSc Epitech février 2027 (rentrée à venir), rythme majoritairement en entreprise ; mentionner MOSLTRANS si pertinent]
 
 PHRASE DE CLÔTURE OBLIGATOIRE (avant "Cordialement,") :
 "Je serais disponible pour échanger sur la manière dont mon profil peut s'intégrer à vos équipes."

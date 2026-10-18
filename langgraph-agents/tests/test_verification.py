@@ -86,7 +86,7 @@ def test_msc_epitech_sans_date_rejete():
 
 
 def test_msc_epitech_avec_date_accepte():
-    motifs = check_programmatique(_lm(extra="Diplômé du MSc Epitech en octobre 2026."))
+    motifs = check_programmatique(_lm(extra="Je rejoins le MSc Epitech en février 2027."))
     assert not any("MSc Epitech" in m for m in motifs)
 
 

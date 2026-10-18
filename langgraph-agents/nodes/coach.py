@@ -36,7 +36,7 @@ CONSIGNES GÉNÉRALES :
 - Base-toi sur l'analyse de l'offre (stack demandée, secteur, niveau) et sur le profil candidat ci-dessus.
 - Un champ "contexte libre" (notes prises par le candidat) peut être fourni : il peut contenir des informations datées ou sans rapport avec l'entretien (relances, suivi administratif...). N'utilise que ce qui est pertinent pour préparer CET entretien (type d'entretien, interlocuteurs, sujets annoncés, points sur lesquels le candidat veut être rassuré) et ignore le reste sans le mentionner.
 - Gap technique entre stack maîtrisée et stack demandée : ne jamais le nier, toujours le nommer et montrer le domaine adjacent maîtrisé + la capacité de montée en compétence rapide (même logique que pour la lettre de motivation).
-- CesedaIA = toujours "en cours", jamais "en production". MSc Epitech = toujours "octobre 2026".
+- CesedaIA = toujours "en cours", jamais "en production". MSc Epitech = toujours "février 2027" (rentrée à venir, jamais "actuellement en MSc").
 """
 
 

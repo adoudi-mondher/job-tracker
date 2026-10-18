@@ -32,8 +32,8 @@ def check_programmatique(lm: str, type_contrat: str = "non précisé") -> list[s
     if re.search(r"CesedaIA.{0,30}en production", lm, re.IGNORECASE):
         motifs.append("CesedaIA présenté comme 'en production' — doit être 'en cours'")
 
-    if ("MSc" in lm or "Epitech" in lm) and "octobre 2026" not in lm:
-        motifs.append("MSc Epitech mentionné sans préciser 'octobre 2026'")
+    if ("MSc" in lm or "Epitech" in lm) and "février 2027" not in lm:
+        motifs.append("MSc Epitech mentionné sans préciser 'février 2027'")
 
     word_count = len(lm.split())
     if word_count < 250:
